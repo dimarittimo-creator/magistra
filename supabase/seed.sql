@@ -76,3 +76,14 @@ $$**TESTO PROVVISORIO – versione definitiva da confermare dal gruppo.**
 $$**TESTO PROVVISORIO – da sostituire con le condizioni validate da un legale (Codice del Consumo).**
 
 L'area Privati non è ancora attiva.$$);
+
+-- Fasce di sconto per scadenza (docs/REGOLE_COMMERCIALI.md §2), modificabili dall'admin
+insert into public.fasce_sconto (mesi_minimi, sconto_percentuale) values (8, 38), (6, 40), (0, 45);
+
+-- Modalità di pagamento iniziali (docs/REGOLE_COMMERCIALI.md §6), modificabili dall'admin
+insert into public.modalita_pagamento (codice, descrizione, canale, richiede_iban, contrassegno, ordine) values
+  ('bonifico_anticipato', 'Bonifico bancario anticipato', 'farmacie', true, false, 10),
+  ('riba_30', 'RIBA 30 giorni', 'farmacie', false, false, 20),
+  ('riba_60', 'RIBA 60 giorni', 'farmacie', false, false, 30),
+  ('riba_90', 'RIBA 90 giorni', 'farmacie', false, false, 40),
+  ('contrassegno', 'Contrassegno', 'farmacie', false, true, 50);
