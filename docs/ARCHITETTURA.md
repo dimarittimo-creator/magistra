@@ -32,8 +32,11 @@ tests/               Vitest + Playwright
 - `farmacie`: aggiungere societa_predefinita_id (null = predefinita del portale).
 - `privati`: nome, cognome, codice_fiscale, email, telefono, stato (`attivo` | `bloccato`), creato_il.
 - `indirizzi`: anche per i privati (privato_id in alternativa a farmacia_id).
-- `profili_utente`: collegato a `auth.users`; ruolo (`farmacia` | `privato` | `admin` | `operatore` | `deposito`), farmacia_id, privato_id, sede_id (solo ruolo deposito).
-- `consensi`: utente, tipo (privacy, condizioni_vendita_farmacie, condizioni_vendita_privati, marketing), versione_documento, accettato_il, ip.
+- `profili_utente`: collegato a `auth.users`; ruolo (`farmacia` | `privato` | `admin` | `operatore` | `deposito`), nome, email, farmacia_id, privato_id, sede_id (solo ruolo deposito).
+- `consensi`: utente_id, tipo (privacy, condizioni_vendita_farmacie, condizioni_vendita_privati, marketing), accettato, documento_id, versione_documento, ip, user_agent, il. Una riga per ogni scelta (anche il ritiro del consenso marketing); non modificabili, si cancellano solo insieme all'account.
+- `documenti_legali` (Fase 1, sostituisce `condizioni_vendita`): tipo (`privacy` | `condizioni_farmacie` | `condizioni_privati`), versione, titolo, testo, provvisorio, in_vigore_dal, creato_da. Una versione pubblicata non si modifica: se ne crea una nuova. Funzione `documento_legale_corrente(tipo)`.
+- `storico_modifiche` (Fase 1): tabella, record_id, prima/dopo (json), utente, il. Scritta dai trigger su `societa`, `sedi`, `farmacie`, `gruppi`; non modificabile.
+- Registrazione farmacia: funzione `registra_farmacia(...)` (solo chiave di servizio) che crea farmacia, indirizzi, profilo e consensi in un'unica transazione. Il trigger `farmacie_protegge_campi` impedisce alla farmacia di cambiare dati identificativi, stato, gruppo e società predefinita.
 
 **Società e sedi** (dettagli in `SOCIETA_E_SEDI.md`)
 - `societa`: ragione_sociale, nome_breve, indirizzo sede legale, partita_iva, codice_fiscale, sdi, pec, rea, capitale_sociale_testo, sito, email, telefono, iban, logo_path, piede_documenti, attiva_farmacie, attiva_privati, predefinita, attiva.
@@ -48,11 +51,11 @@ tests/               Vitest + Playwright
 
 **Condizioni commerciali**
 - `fasce_sconto`: mesi_minimi, sconto_percentuale, attiva; `fasce_sconto_storico`.
-- `impostazioni`: iva_predefinita, giorni_validita_prenotazione, giorni_consegna_indicativi (default 5), soglia_minima_ordine, soglia_trasporto_gratuito, costo_trasporto, orario_invio_cumulativo, ore_sollecito_ddt, mesi_minimi_lotto_privati (default 6), area_privati_attiva (default no). Gli indirizzi email del deposito stanno in `sedi`.
-- `gruppi`, `listini_gruppo` (gruppo, prodotto, prezzo o sconto).
+- `impostazioni`: iva_predefinita, giorni_validita_prenotazione, giorni_consegna_indicativi (default 5), soglia_minima_ordine, soglia_trasporto_gratuito, costo_trasporto, orario_invio_cumulativo, ore_sollecito_ddt, mesi_minimi_lotto_privati (default 6), area_privati_attiva (default no), email_notifiche_admin (vuoto = tutti gli admin). Gli indirizzi email del deposito stanno in `sedi`.
+- `gruppi` (nome, descrizione, attivo; Fase 1), `listini_gruppo` (gruppo, prodotto, prezzo o sconto; Fase 3).
 - `promozioni`: nome, tipo (`sconto_percentuale` | `sconto_merce` | `omaggio`), parametri (json: es. {compra:10, omaggio:2}), ambito (`prodotto` | `lotto` | `linea` | `catalogo`), riferimento_id, gruppo_id (null = tutti), inizio, fine, stato, duplicata_da.
 - `modalita_pagamento`: codice, descrizione, canale (`farmacie` | `privati` | `entrambi`), costo_aggiuntivo_cent, attiva, ordine; `modalita_pagamento_farmacia` / `_gruppo` per eventuali limitazioni.
-- `condizioni_vendita`: canale (`farmacie` | `privati`), versione, testo, attiva_dal, creato_da.
+- Condizioni di vendita: vedi `documenti_legali` (tipi `condizioni_farmacie` e `condizioni_privati`).
 - `sconti_privati`: ambito (`catalogo` | `linea` | `prodotto`), riferimento_id, sconto_percentuale, inizio, fine, copiato_da, stato.
 - `spese_spedizione`: canale, importo_cent, soglia_gratuita_cent, iva, attiva (vuota finché Salvatore non indica i valori).
 
@@ -74,6 +77,13 @@ tests/               Vitest + Playwright
 
 **Controllo**
 - `registro_operazioni`: utente, azione, entità, id, prima/dopo (json), il.
+
+## Accesso e sessioni (Fase 1)
+- Supabase Auth con email e password (almeno 8 caratteri, lettere e numeri) e conferma dell'indirizzo email obbligatoria.
+- Le email di sistema (conferma, recupero password) usano i modelli in italiano di `supabase/templates/` e portano a `/auth/conferma?token_hash=…`, che verifica il codice e collega l'utente (funziona anche se l'email si apre su un altro dispositivo). **In produzione** gli stessi modelli vanno copiati nel pannello Supabase (Authentication → Email Templates) e l'SMTP va collegato a Brevo.
+- `proxy.ts` rinnova la sessione e rimanda all'accesso chi apre un'area riservata senza essere collegato; i permessi veri li controllano pagine, azioni (`lib/auth.ts`: `richiediAdmin`, `richiediStaff`, `richiediFarmacia`) e Row Level Security.
+- `/area` porta ognuno alla propria area in base al ruolo.
+- Email transazionali del portale (`lib/email`): Brevo se c'è `BREVO_API_KEY`, altrimenti in sviluppo la casella di prova locale Mailpit (http://127.0.0.1:54324).
 
 ## Job pianificati (Vercel Cron)
 - Ogni 15 minuti: scadenza prenotazioni non confermate; attivazione/disattivazione promozioni.
