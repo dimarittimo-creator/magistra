@@ -147,6 +147,11 @@
   .btn-secondary:hover {
     background: var(--brand-soft);
   }
+  .btn-piccolo {
+    min-height: 2.25rem;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
+  }
   .btn:disabled {
     opacity: 0.45;
     cursor: default;
@@ -182,6 +187,121 @@
   .pill-off {
     background: var(--grey-soft);
     color: var(--muted);
+  }
+
+  /* Moduli */
+  .etichetta {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+  .input,
+  .select,
+  .textarea {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+  }
+  .input:focus-visible,
+  .select:focus-visible,
+  .textarea:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 0;
+    border-color: var(--brand);
+  }
+  .input[aria-invalid="true"],
+  .select[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+  .input:disabled {
+    background: var(--grey-soft);
+    color: var(--muted);
+  }
+  .aiuto {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .errore-campo {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--danger);
+  }
+  .avviso {
+    border-left: 4px solid;
+    padding: 0.6rem 1rem;
+    border-radius: 0.4rem;
+  }
+  .avviso-ok {
+    border-color: var(--slate);
+    background: var(--slate-soft);
+    color: var(--ink);
+  }
+  .avviso-errore {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+  .avviso-attenzione {
+    border-color: var(--amber);
+    background: var(--amber-soft);
+    color: var(--ink);
+  }
+  .avviso-info {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    color: var(--ink);
+  }
+
+  /* Tabelle dell'area admin */
+  .tabella {
+    width: 100%;
+    font-size: 0.925rem;
+    border-collapse: collapse;
+  }
+  .tabella th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .tabella td {
+    padding: 0.6rem 0.75rem 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  /* Menu delle aree riservate */
+  .menu-area {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .menu-area a {
+    padding: 0.6rem 0.9rem;
+    border-bottom: 3px solid transparent;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .menu-area a:hover {
+    color: var(--brand);
+  }
+  .menu-area a[aria-current="page"] {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+    font-weight: 700;
   }
 
   /* Filetto color rame sotto i titoli */
