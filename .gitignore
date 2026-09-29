@@ -1,0 +1,27 @@
+# dipendenze e build
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# segreti: mai nel repository
+.env
+.env*.local
+
+# dati sensibili del seed (IBAN): vedi supabase/esempi/seed_privato.sql
+supabase/seed_privato.sql
+supabase/.branches
+supabase/.temp
+
+# test
+/test-results/
+/playwright-report/
+/coverage/
+
+# sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+*.zip

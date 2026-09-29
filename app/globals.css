@@ -1,0 +1,204 @@
+@import "tailwindcss";
+
+/* Token colore da docs/GRAFICA.md. Le variabili cambiano in modalità scura;
+   le utility Tailwind (bg-brand, text-muted, …) le seguono automaticamente. */
+:root {
+  --brand: #022976;
+  --brand-hover: #0a3a9a;
+  --brand-ink: #ffffff;
+  --brand-soft: #e6ebf5;
+  --danger: #d4200a;
+  --danger-logo: #ff2207;
+  --danger-soft: #fde6e2;
+  --slate: #4e676e;
+  --slate-logo: #6b8289;
+  --slate-soft: #e7eef0;
+  --ink: #1d2427;
+  --muted: #5a6a70;
+  --bg: #f6f7f7;
+  --surface: #ffffff;
+  --line: #dfe4e6;
+  --amber: #9a6200;
+  --amber-soft: #fbf0dc;
+  --grey-soft: #eceff0;
+  --magistra-blu: #022976;
+  --magistra-rame: #b0652a;
+  --fascia-1: #6b8289;
+  --fascia-2: #e0913a;
+  --fascia-3: #ff2207;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand: #8fa8e0;
+    --brand-hover: #afc2ea;
+    --brand-ink: #0b1a3a;
+    --brand-soft: #1b2640;
+    --danger: #ff5a42;
+    --danger-logo: #ff5a42;
+    --danger-soft: #3d1f1a;
+    --slate: #9fb6bd;
+    --slate-logo: #8fa6ad;
+    --slate-soft: #243034;
+    --ink: #e8ecee;
+    --muted: #9eabb0;
+    --bg: #15191b;
+    --surface: #1d2326;
+    --line: #2e373b;
+    --amber: #e4b25a;
+    --amber-soft: #3a2f1a;
+    --grey-soft: #262e31;
+    --magistra-blu: #8fa8e0;
+    --magistra-rame: #d99a62;
+    --fascia-1: #8fa6ad;
+    --fascia-2: #e9a65a;
+    --fascia-3: #ff5a42;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-danger: var(--danger);
+  --color-danger-logo: var(--danger-logo);
+  --color-danger-soft: var(--danger-soft);
+  --color-slate: var(--slate);
+  --color-slate-logo: var(--slate-logo);
+  --color-slate-soft: var(--slate-soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-grey-soft: var(--grey-soft);
+  --color-magistra-blu: var(--magistra-blu);
+  --color-magistra-rame: var(--magistra-rame);
+  --color-fascia-1: var(--fascia-1);
+  --color-fascia-2: var(--fascia-2);
+  --color-fascia-3: var(--fascia-3);
+
+  --font-sans: var(--font-public-sans), system-ui, "Segoe UI", sans-serif;
+  --font-serif: var(--font-tinos), "Times New Roman", Times, serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 1.15;
+  }
+  a {
+    color: var(--brand);
+  }
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Pulsanti: principali in blu Magistra, secondari con bordo blu. Il rosso non si usa per i pulsanti. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+  .btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--brand-ink);
+  }
+  .btn-primary:hover {
+    background: var(--brand-hover);
+    border-color: var(--brand-hover);
+  }
+  .btn-secondary {
+    background: var(--surface);
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+  .btn-secondary:hover {
+    background: var(--brand-soft);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+  }
+
+  /* Etichette di stato: sempre con testo, mai solo colore */
+  .pill {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .pill-ok {
+    background: var(--slate-soft);
+    color: var(--slate);
+  }
+  .pill-warn {
+    background: var(--amber-soft);
+    color: var(--amber);
+  }
+  .pill-bad {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+  .pill-off {
+    background: var(--grey-soft);
+    color: var(--muted);
+  }
+
+  /* Filetto color rame sotto i titoli */
+  .filetto {
+    display: block;
+    width: 3rem;
+    height: 2px;
+    background: var(--magistra-rame);
+    margin-top: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

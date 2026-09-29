@@ -1,0 +1,10 @@
+Ciao. Questa cartella contiene tutto il necessario per costruire Magistra, il portale ordini per farmacie e privati di Sagè Pharma e Bioeleva.
+
+Leggi prima CLAUDE.md e poi tutti i documenti nella cartella docs, nell'ordine indicato. Guarda anche i file in dati e design (compreso il logo Magistra).
+
+Poi:
+1. dimmi in poche righe cosa hai capito del progetto e se trovi punti poco chiari o in contraddizione;
+2. controlla cosa è installato sul mio computer e dimmi, passo passo, cosa devo installare io;
+3. inizia la Fase 0 e fermati quando è completa, spiegandomi come vedere il risultato.
+
+Non passare alla fase successiva senza il mio ok.
