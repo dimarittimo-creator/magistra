@@ -20,7 +20,7 @@ export async function aggiungiAlCarrello(lottoId: string, _prima: StatoModulo, f
   const db = await creaClientServer();
   const { data: riga } = await db.from("lotti").select("prodotto_codice").eq("id", lottoId).maybeSingle();
   if (!riga) return { messaggio: "Lotto non trovato." };
-  const catalogo = await caricaCatalogo(db, { codice: riga.prodotto_codice });
+  const catalogo = await caricaCatalogo(db, { codice: riga.prodotto_codice, farmaciaId });
   const lotto = catalogo.prodotti[0]?.lotti.find((l) => l.id === lottoId);
   if (!lotto || lotto.stato !== "vendibile") return { messaggio: "Questo lotto non è più disponibile." };
 

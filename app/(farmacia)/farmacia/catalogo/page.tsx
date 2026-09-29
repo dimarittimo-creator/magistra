@@ -16,10 +16,10 @@ export default async function Catalogo({
 }: {
   searchParams: Promise<{ q?: string; linea?: string; area?: string; disponibili?: string }>;
 }) {
-  await richiediFarmaciaAttiva();
+  const { farmaciaId } = await richiediFarmaciaAttiva();
   const filtri = await searchParams;
   const db = await creaClientServer();
-  const catalogo = await caricaCatalogo(db);
+  const catalogo = await caricaCatalogo(db, { farmaciaId });
 
   const linee = [...new Map(catalogo.prodotti.filter((p) => p.linea).map((p) => [p.linea!.id, p.linea!])).values()].sort((a, b) => a.nome.localeCompare(b.nome));
   const aree = [...new Map(catalogo.prodotti.filter((p) => p.area).map((p) => [p.area!.id, p.area!])).values()].sort((a, b) => a.nome.localeCompare(b.nome));

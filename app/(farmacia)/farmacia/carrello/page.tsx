@@ -18,7 +18,7 @@ export default async function Carrello() {
   const utente = await richiediFarmaciaAttiva();
   const db = await creaClientServer();
   const [catalogo, salvate, condizioni, { data: societa }, { data: pagamenti }, { data: farmacia }, { data: consentite }] = await Promise.all([
-    caricaCatalogo(db),
+    caricaCatalogo(db, { farmaciaId: utente.farmaciaId }),
     leggiRigheCarrello(db, utente.farmaciaId),
     documentoCorrente("condizioni_farmacie"),
     db.from("societa").select("*").eq("attiva", true).eq("attiva_farmacie", true).order("predefinita", { ascending: false }),
@@ -96,36 +96,57 @@ export default async function Carrello() {
 
       <section className="panel p-4 sm:p-6" aria-label="Prodotti nel carrello">
         <ul className="divide-y divide-line">
-          {carrello.righe.map((r) => (
-            <li key={r.lottoId} className="py-4 grid gap-3 md:grid-cols-[2fr_1fr_auto_auto] md:items-center">
-              <div>
-                <p className="font-semibold">
-                  {r.prodotto ? <Link href={`/farmacia/catalogo/${r.prodotto.codice}`}>{r.prodotto.nome}</Link> : "Prodotto non più disponibile"}
-                </p>
-                {r.lotto && (
+          {carrello.righe.map((r) =>
+            r.omaggio ? (
+              <li key={`omaggio-${r.omaggio.promozioneId}-${r.lottoId}`} className="py-4 grid gap-3 md:grid-cols-[2fr_1fr_auto_auto] md:items-center bg-slate-soft rounded-lg px-3">
+                <div>
+                  <p className="font-semibold">
+                    <span className="pill pill-ok mr-2">Omaggio</span>
+                    {r.prodotto?.nome}
+                  </p>
                   <p className="text-sm text-muted">
-                    Lotto {r.lotto.codice_lotto} · scad. {r.lotto.scadenza ? formattaData(r.lotto.scadenza) : "—"} · disponibili {r.lotto.disponibile}
+                    Promozione «{r.omaggio.nome}» · lotto {r.lotto?.codice_lotto} · scad. {r.lotto?.scadenza ? formattaData(r.lotto.scadenza) : "—"}
                   </p>
-                )}
-                {r.problemi.map((p) => (
-                  <p key={p} className="errore-campo">{p}</p>
-                ))}
-              </div>
-              <div className="text-sm">
-                {r.lotto?.sconto && <BadgeSconto sconto={r.lotto.sconto} />}
-                {r.lotto?.prezzi && (
-                  <p>
-                    <span className="font-bold">{formattaEuro(r.lotto.prezzi.farmaciaNettoCent)}</span>
-                    <span className="text-muted"> IVA escl.</span>
+                </div>
+                <div />
+                <p className="text-sm font-semibold">{r.quantitaOmaggio} pz</p>
+                <p className="text-right font-semibold md:w-28">0,00 €</p>
+              </li>
+            ) : (
+              <li key={r.lottoId} className="py-4 grid gap-3 md:grid-cols-[2fr_1fr_auto_auto] md:items-center">
+                <div>
+                  <p className="font-semibold">
+                    {r.prodotto ? <Link href={`/farmacia/catalogo/${r.prodotto.codice}`}>{r.prodotto.nome}</Link> : "Prodotto non più disponibile"}
                   </p>
-                )}
-              </div>
-              <QuantitaRiga lottoId={r.lottoId} quantita={r.quantita} massimo={r.lotto?.disponibile ?? r.quantita} etichetta={etichette[r.lottoId]} />
-              <p className="text-right font-semibold tabular-nums md:w-28">
-                {r.lotto?.prezzi ? formattaEuro(r.lotto.prezzi.farmaciaNettoCent * r.quantita) : "—"}
-              </p>
-            </li>
-          ))}
+                  {r.lotto && (
+                    <p className="text-sm text-muted">
+                      Lotto {r.lotto.codice_lotto} · scad. {r.lotto.scadenza ? formattaData(r.lotto.scadenza) : "—"} · disponibili {r.lotto.disponibile}
+                    </p>
+                  )}
+                  {r.quantitaOmaggio > 0 && <p className="text-sm text-slate font-semibold">+ {r.quantitaOmaggio} pezzi in omaggio (sconto merce)</p>}
+                  {r.avvisi.map((a) => (
+                    <p key={a} className="text-sm text-amber font-semibold">{a}</p>
+                  ))}
+                  {r.problemi.map((p) => (
+                    <p key={p} className="errore-campo">{p}</p>
+                  ))}
+                </div>
+                <div className="text-sm">
+                  {r.lotto?.sconto && <BadgeSconto sconto={r.lotto.sconto} />}
+                  {r.lotto?.prezzi && (
+                    <p>
+                      <span className="font-bold">{formattaEuro(r.lotto.prezzi.farmaciaNettoCent)}</span>
+                      <span className="text-muted"> IVA escl.</span>
+                    </p>
+                  )}
+                </div>
+                <QuantitaRiga lottoId={r.lottoId} quantita={r.quantita} massimo={r.lotto?.disponibile ?? r.quantita} etichetta={etichette[r.lottoId]} />
+                <p className="text-right font-semibold tabular-nums md:w-28">
+                  {r.lotto?.prezzi ? formattaEuro(r.lotto.prezzi.farmaciaNettoCent * r.quantita) : "—"}
+                </p>
+              </li>
+            ),
+          )}
         </ul>
       </section>
 

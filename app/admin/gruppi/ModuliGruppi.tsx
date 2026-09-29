@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Campo, Casella, EsitoModulo, PulsanteInvio } from "@/components/moduli";
 import type { StatoModulo } from "@/lib/farmacie/dati";
@@ -47,6 +48,7 @@ export function RigaGruppo({
         </div>
         <div className="flex items-center gap-3">
           {stato.ok && <span role="status" className="text-sm text-slate">{stato.messaggio}</span>}
+          <Link href={`/admin/gruppi/${gruppo.id}`} className="btn btn-secondary btn-piccolo">Listino dedicato</Link>
           <button type="button" className="btn btn-secondary btn-piccolo" onClick={() => setModifica(true)}>
             Modifica
           </button>

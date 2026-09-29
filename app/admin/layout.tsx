@@ -15,6 +15,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           { href: "/admin/fatturazione", testo: "Fatturazione" },
           { href: "/admin/magazzino", testo: "Magazzino" },
           { href: "/admin/sconti", testo: "Sconti e prezzi" },
+          { href: "/admin/promozioni", testo: "Promozioni" },
           { href: "/admin/gruppi", testo: "Gruppi" },
           { href: "/admin/pagamenti", testo: "Pagamenti" },
           { href: "/admin/documenti", testo: "Condizioni e privacy" },

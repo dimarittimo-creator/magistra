@@ -4,8 +4,8 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 
 - [x] Fase 0 – Preparazione — **completata** (29/09/2026): Node.js, Git, WSL e Docker Desktop installati; database locale avviato con le due società (con IBAN), le quattro sedi e l'operatore CIENNE collegato al deposito predefinito; test verdi.
 - [x] Fase 1 – Registrazione, accesso, società e sedi — **completata** e approvata (29/09/2026).
-- [x] Fase 2 – Catalogo e prenotazione farmacie — **completata** (29/09/2026), in attesa dell'ok di Salvatore: test verdi (90 Vitest, 10 Playwright).
-- [ ] Fase 3 – Amministrazione e spedizioni al deposito
+- [x] Fase 2 – Catalogo e prenotazione farmacie — **completata** e approvata (29/09/2026).
+- [x] Fase 3 – Amministrazione e spedizioni al deposito — **completata** (29/09/2026), in attesa dell'ok di Salvatore: test verdi (94 Vitest, 21 Playwright), compilazione di produzione riuscita.
 - [ ] Fase 4 – Documenti
 - [ ] Fase 5 – Area Privati (B2C)
 - [ ] Fase 6 – Chatbot
@@ -43,6 +43,32 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 3. Email ricevute dal portale (casella di prova): http://127.0.0.1:54324
 4. Test automatici: `npm test` e `npm run test:e2e` (il sito deve essere avviato o si avvia da solo).
 5. Amministratore vero per la messa online: `npm run crea-admin -- email "Nome Cognome"`.
+
+## Fase 3 – cosa c'è
+- **Magazzino** (`/admin/magazzino`): import di giacenza del deposito (Crystal `.xls`), listino e modello Magistra con **anteprima** (errori, difformità, lotti senza scadenza o scaduti, codici nuovi, prodotti spariti, giacenza sotto il prenotato) e conferma o annullamento; scelta del deposito e della data; export del magazzino e modello vuoto con legenda (stesso formato, si ricarica così com'è).
+- **Sconti e prezzi** (`/admin/sconti`) come il riferimento grafico: fasce di scadenza modificabili (serve sempre la fascia da 0 mesi, niente mesi doppi), IVA predefinita, prezzo e IVA per prodotto, sconto sul singolo lotto; prezzi ricalcolati mentre scrivi e conteggio dei lotti che cambiano prima di salvare; storico.
+- **Prodotti** (`/admin/prodotti`): nome, formato, descrizione, linea e area terapeutica (anche nuove), minimo e multiplo, soglia in esaurimento, visibilità privati, attivo; storico.
+- **Impostazioni**, **Condizioni e privacy** (nuove versioni, con data di entrata in vigore; le vecchie restano), **Pagamenti** (modalità per canale, bonifico/contrassegno, **limitazioni per farmacia o gruppo** applicate a carrello e invio).
+- **Ordini**: prendi in verifica, conferma, **modifica** (quantità, righe tolte, società che fattura, pagamento; merce ricontrollata con i lotti bloccati), **rifiuto con motivo** (la merce torna disponibile), export Excel; email alla farmacia a ogni cambio di stato.
+- **Deposito**: richiesta di evasione **PDF + Excel** (mittente = società, deposito di partenza, destinatario, lotti e quantità, omaggi su righe separate, contrassegno in evidenza, prezzi solo se attivati) inviata all'email del deposito con le copie; modalità **singola** (pulsante sull'ordine) o **cumulativa** (all'orario impostato, job `/api/cron/deposito`); **registrazione DDT** con numero, data, corriere, tracking, colli, PDF e **differenze** riga per riga (quantità o lotto diversi); **sollecito** all'amministrazione se manca il DDT oltre le ore impostate; la farmacia vede la spedizione e **scarica il DDT**. La merce spedita dopo la data della giacenza resta sottratta finché un nuovo import non la comprende.
+- **Fatturazione** (`/admin/fatturazione`): **DDT da fatturare separati per società** e canale, segno "fatturato", export Excel (DDT, righe, valore distribuito) con scadenze RIBA stimate; **valore distribuito per mese**, deposito e società con il compenso stimato dell'operatore (2% CIENNE).
+- **Gruppi e listini dedicati**: per ogni gruppo prezzo al pubblico diverso e/o sconto riservato (vale il migliore con lo sconto del lotto).
+- **Promozioni** (`/admin/promozioni`) con calendario, stato automatico (programmata, attiva, conclusa, sospesa) e **duplica**: sconto % (vale il migliore, mai la somma), **sconto merce** "10+2" e **omaggio** di un altro prodotto (a prezzo zero, impegnano giacenza, righe separate); per catalogo, linea, prodotto o lotto, per tutte le farmacie o un gruppo.
+- **Cruscotto** con filtri per periodo, società e canale: cose da fare, ordini e imponibile del periodo, prodotti più richiesti, farmacie più attive, lotti in scadenza.
+- **Registro operazioni** con tutte le nuove azioni. L'operatore gestisce ordini e spedizioni ma non impostazioni commerciali né società.
+- Database: `20260930120000_fase3_amministrazione_deposito.sql`, `20260930150000_fase3_pagamenti_consentiti.sql`.
+- Test: `tests/e2e/fase3-magazzino.spec.ts`, `fase3-ordini.spec.ts`, `fase3-commerciale.spec.ts`, `tests/unit/promozioni.test.ts`.
+
+### Come provarlo
+1. Accedi come **admin@magistra.test**. **Magazzino** → carica `dati/giacenza_esempio_21-09-2026.xls` → anteprima → **Applica**; in **Prodotti** ELIVID è "Mancante temporaneamente".
+2. Con la farmacia di prova invia una prenotazione; da **Ordini** → **Conferma** → **Invia al deposito** (l'email con PDF ed Excel arriva nella casella di prova http://127.0.0.1:54324, non al deposito vero) → **Registra il DDT**. La farmacia vede DDT e tracking nel suo ordine.
+3. **Fatturazione**: scegli Sagè Pharma o Bioeleva per vedere i DDT separati.
+4. Per provare l'invio cumulativo o il sollecito senza aspettare: http://localhost:3000/api/cron/deposito (con `?cumulativo=ora` forza l'invio cumulativo, solo in locale).
+
+### Scelte da confermare
+- **Formato della richiesta di evasione**: ho proposto un formato standard (PDF + Excel); va confrontato con il file che Sagè Pharma invia oggi al deposito.
+- **Scadenze RIBA** nell'export: stimate come data DDT + 30/60/90 giorni a fine mese; la data vera dipende dalla fattura.
+- **Omaggi quando l'admin riduce le quantità** di un ordine: gli omaggi già calcolati restano; se servono meno omaggi vanno tolti a mano (da rivedere se capita spesso).
 
 ## Fase 2 – cosa c'è
 - **Import iniziale** della giacenza di esempio (Crystal `.xls`, letta così com'è) e del listino sul deposito predefinito: `npm run importa-dati` (47 prodotti, 64 lotti, 90.297 pezzi; 8 prodotti senza prezzo restano non visibili). Lettura in `lib/import/`, scrittura in `lib/import/applica.ts`, riusabili dall'interfaccia admin della Fase 3.

@@ -10,9 +10,11 @@ import {
 } from "@/lib/availability";
 import { oggiRoma, type DataISO } from "@/lib/date";
 import { aliquotaProdotto, calcolaPrezzi, scontoPerLotto, type Fascia, type Prezzi, type ScontoLotto } from "@/lib/pricing";
+import { migliorScontoPromo, promoMerce, type Promozione } from "@/lib/promozioni";
 
-// Catalogo per le farmacie: unisce dati del database, stati (lib/availability)
-// e prezzi (lib/pricing). Usato da catalogo, scheda prodotto, carrello e invio ordine.
+// Catalogo per le farmacie: unisce dati del database, stati (lib/availability), prezzi (lib/pricing),
+// listino del gruppo della farmacia e promozioni attive (lib/promozioni).
+// Usato da catalogo, scheda prodotto, carrello, invio ordine e area admin.
 
 export type Impostazioni = {
   iva_predefinita: number;
@@ -23,6 +25,8 @@ export type Impostazioni = {
   mesi_non_vendibile: number | null;
 };
 
+export type PromoMerce = Pick<Promozione, "id" | "nome" | "tipo" | "compra" | "omaggio_quantita" | "omaggio_prodotto_codice">;
+
 export type LottoCatalogo = {
   id: string;
   codice_lotto: string;
@@ -32,6 +36,8 @@ export type LottoCatalogo = {
   stato: StatoLotto;
   sconto: ScontoLotto | null;
   prezzi: Prezzi | null;
+  /** Sconto merce e omaggi validi per questo lotto */
+  promoMerce: PromoMerce[];
 };
 
 export type ProdottoCatalogo = {
@@ -43,7 +49,9 @@ export type ProdottoCatalogo = {
   area: { id: string; nome: string } | null;
   immagine_path: string | null;
   iva: number;
+  /** Prezzo al pubblico che vale per questa farmacia (listino del gruppo se c'è) */
   prezzo_pubblico_cent: number | null;
+  prezzoDiGruppo: boolean;
   minimo_ordine: number;
   multiplo: number;
   stato: StatoProdotto;
@@ -83,12 +91,13 @@ type RigaLotto = {
 
 /**
  * Carica il catalogo (tutto, o un solo prodotto) con il client dell'utente: la RLS
- * lo rende leggibile solo a farmacie attive e staff. Con `includiNonVisibili` (staff)
+ * lo rende leggibile solo a farmacie attive e staff. Con `farmaciaId` si applicano
+ * listino del gruppo e promozioni riservate; con `includiNonVisibili` (staff)
  * restano anche i prodotti senza prezzo.
  */
 export async function caricaCatalogo(
   db: SupabaseClient,
-  opzioni: { codice?: string; oggi?: DataISO; includiNonVisibili?: boolean } = {},
+  opzioni: { codice?: string; oggi?: DataISO; includiNonVisibili?: boolean; farmaciaId?: string } = {},
 ): Promise<Catalogo> {
   const oggi = opzioni.oggi ?? oggiRoma();
   let qProdotti = db
@@ -103,20 +112,25 @@ export async function caricaCatalogo(
     qGiacenze = qGiacenze.eq("prodotto_codice", opzioni.codice);
   }
 
-  const [imp, fasce, prodotti, lotti, giacenze, disp] = await Promise.all([
+  const gruppoId = opzioni.farmaciaId
+    ? (((await db.from("farmacie").select("gruppo_id").eq("id", opzioni.farmaciaId).maybeSingle()).data?.gruppo_id as string | null) ?? null)
+    : null;
+
+  const [imp, fasce, prodotti, lotti, giacenze, disp, promo, listino] = await Promise.all([
     db.from("impostazioni").select("iva_predefinita, giorni_validita_prenotazione, giorni_consegna_indicativi, soglia_minima_ordine_cent, soglia_esaurimento_default, mesi_non_vendibile").single(),
     db.from("fasce_sconto").select("mesi_minimi, sconto_percentuale").eq("attiva", true),
     qProdotti,
     qLotti,
     qGiacenze,
     db.rpc("disponibilita_lotti", opzioni.codice ? { p_prodotto: opzioni.codice } : {}),
+    db.from("promozioni").select("*").lte("inizio", oggi).gte("fine", oggi).eq("sospesa", false),
+    gruppoId
+      ? db.from("listini_gruppo").select("prodotto_codice, prezzo_pubblico_cent, sconto_percentuale").eq("gruppo_id", gruppoId)
+      : Promise.resolve({ data: [], error: null }),
   ]);
-  for (const r of [imp, fasce, prodotti, lotti, giacenze, disp]) if (r.error) throw new Error(r.error.message);
+  for (const r of [imp, fasce, prodotti, lotti, giacenze, disp, promo, listino]) if (r.error) throw new Error(r.error.message);
 
-  const impostazioni = {
-    ...(imp.data as Impostazioni),
-    iva_predefinita: Number(imp.data!.iva_predefinita),
-  };
+  const impostazioni = { ...(imp.data as Impostazioni), iva_predefinita: Number(imp.data!.iva_predefinita) };
   const fasceNum: Fascia[] = (fasce.data ?? []).map((f) => ({ mesi_minimi: f.mesi_minimi, sconto_percentuale: Number(f.sconto_percentuale) }));
   const disponibile = new Map(((disp.data ?? []) as { lotto_id: string; disponibile: number }[]).map((d) => [d.lotto_id, d.disponibile]));
   const lottiPerProdotto = Map.groupBy((lotti.data ?? []) as RigaLotto[], (l) => l.prodotto_codice);
@@ -124,10 +138,18 @@ export async function caricaCatalogo(
     (giacenze.data ?? []) as { prodotto_codice: string; deposito_id: string; totale_dichiarato: number }[],
     (g) => g.prodotto_codice,
   );
+  const promozioni = (promo.data ?? []) as Promozione[];
+  const perGruppo = new Map(
+    ((listino.data ?? []) as { prodotto_codice: string; prezzo_pubblico_cent: number | null; sconto_percentuale: number | null }[]).map((l) => [l.prodotto_codice, l]),
+  );
+  const chi = { gruppoId };
 
   const risultato: ProdottoCatalogo[] = [];
   for (const p of (prodotti.data ?? []) as unknown as RigaProdotto[]) {
     const iva = aliquotaProdotto(p.iva_override == null ? null : Number(p.iva_override), impostazioni.iva_predefinita);
+    const dedicato = perGruppo.get(p.codice);
+    const prezzo = dedicato?.prezzo_pubblico_cent ?? p.prezzo_pubblico_cent;
+    const scontoGruppo = dedicato?.sconto_percentuale == null ? null : Number(dedicato.sconto_percentuale);
     const righeLotti = (lottiPerProdotto.get(p.codice) ?? []).filter((l) => l.giacenza > 0);
     const base = righeLotti.map((l) => ({ ...l, disponibile: disponibile.get(l.id) ?? l.giacenza }));
     const difforme = haDifformita(
@@ -136,15 +158,18 @@ export async function caricaCatalogo(
     );
 
     const lottiCatalogo: LottoCatalogo[] = base.map((l) => {
-      const stato = statoLotto(l, {
-        oggi,
-        difforme,
-        conPrezzo: p.prezzo_pubblico_cent != null,
-        mesiNonVendibile: impostazioni.mesi_non_vendibile,
-      });
+      const stato = statoLotto(l, { oggi, difforme, conPrezzo: prezzo != null, mesiNonVendibile: impostazioni.mesi_non_vendibile });
+      const cosa = { prodotto: p.codice, lineaId: p.linea?.id ?? null, lottoId: l.id };
       const sconto =
         stato === "vendibile" || stato === "esaurito"
-          ? scontoPerLotto({ scadenza: l.scadenza!, oggi, fasce: fasceNum, scontoManuale: l.sconto_manuale == null ? null : Number(l.sconto_manuale) })
+          ? scontoPerLotto({
+              scadenza: l.scadenza!,
+              oggi,
+              fasce: fasceNum,
+              scontoManuale: l.sconto_manuale == null ? null : Number(l.sconto_manuale),
+              promozione: migliorScontoPromo(promozioni, cosa, chi, oggi),
+              scontoGruppo,
+            })
           : null;
       return {
         id: l.id,
@@ -154,11 +179,12 @@ export async function caricaCatalogo(
         disponibile: Math.max(l.disponibile, 0),
         stato,
         sconto,
-        prezzi: sconto && p.prezzo_pubblico_cent != null ? calcolaPrezzi(p.prezzo_pubblico_cent, iva, sconto.sconto) : null,
+        prezzi: sconto && prezzo != null ? calcolaPrezzi(prezzo, iva, sconto.sconto) : null,
+        promoMerce: stato === "vendibile" ? promoMerce(promozioni, cosa, chi, oggi).map(({ id, nome, tipo, compra, omaggio_quantita, omaggio_prodotto_codice }) => ({ id, nome, tipo, compra, omaggio_quantita, omaggio_prodotto_codice })) : [],
       };
     });
 
-    const { stato, disponibile: totale } = statoProdotto(p, lottiCatalogo.map((l, i) => ({ ...base[i], stato: l.stato })), {
+    const { stato, disponibile: totale } = statoProdotto({ ...p, prezzo_pubblico_cent: prezzo }, lottiCatalogo.map((l, i) => ({ ...base[i], stato: l.stato })), {
       difforme,
       sogliaEsaurimentoPredefinita: impostazioni.soglia_esaurimento_default,
     });
@@ -166,10 +192,7 @@ export async function caricaCatalogo(
 
     const visibili = lottiCatalogo.filter((l) => lottoVisibile(l.stato)).sort((a, b) => (a.scadenza ?? "9999").localeCompare(b.scadenza ?? "9999"));
     const vendibili = visibili.filter((l) => l.stato === "vendibile" && l.prezzi);
-    const prezzoMigliore = vendibili.reduce<Prezzi | null>(
-      (m, l) => (!m || l.prezzi!.farmaciaNettoCent < m.farmaciaNettoCent ? l.prezzi : m),
-      null,
-    );
+    const prezzoMigliore = vendibili.reduce<Prezzi | null>((m, l) => (!m || l.prezzi!.farmaciaNettoCent < m.farmaciaNettoCent ? l.prezzi : m), null);
 
     risultato.push({
       codice: p.codice,
@@ -180,7 +203,8 @@ export async function caricaCatalogo(
       area: p.area,
       immagine_path: p.immagine_path,
       iva,
-      prezzo_pubblico_cent: p.prezzo_pubblico_cent,
+      prezzo_pubblico_cent: prezzo,
+      prezzoDiGruppo: dedicato?.prezzo_pubblico_cent != null,
       minimo_ordine: p.minimo_ordine,
       multiplo: p.multiplo,
       stato,

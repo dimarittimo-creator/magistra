@@ -38,7 +38,7 @@ export async function inviaPrenotazione(_prima: StatoInvio, fd: FormData): Promi
   const condizioniId = leggi(fd, "condizioni_documento_id");
 
   const [catalogo, salvate, farmacia, { data: societa }, { data: pagamento }, { data: condizioni }, { data: consentite }] = await Promise.all([
-    caricaCatalogo(db),
+    caricaCatalogo(db, { farmaciaId: utente.farmaciaId }),
     leggiRigheCarrello(db, utente.farmaciaId),
     leggiFarmacia(db, utente.farmaciaId),
     societaId
@@ -118,24 +118,28 @@ export async function inviaPrenotazione(_prima: StatoInvio, fd: FormData): Promi
     intestatario: pagamento.richiede_iban ? societa.ragione_sociale : null,
   };
 
-  const righe = carrello.righe.map((r) => ({
-    lotto_id: r.lottoId,
-    prodotto_codice: r.prodotto!.codice,
-    prodotto_nome: r.prodotto!.nome,
-    codice_lotto: r.lotto!.codice_lotto,
-    scadenza: r.lotto!.scadenza,
-    quantita: r.quantita,
-    quantita_omaggio: 0,
-    prezzo_pubblico_cent: r.lotto!.prezzi!.pubblicoIvatoCent,
-    iva: r.prodotto!.iva,
-    sconto_applicato: r.lotto!.sconto!.sconto,
-    origine_sconto: r.lotto!.sconto!.origine,
-    promozione_id: r.lotto!.sconto!.promozioneId ?? null,
-    prezzo_pubblico_netto_cent: r.lotto!.prezzi!.pubblicoNettoCent,
-    prezzo_farmacia_ivato_cent: r.lotto!.prezzi!.farmaciaIvatoCent,
-    prezzo_farmacia_netto_cent: r.lotto!.prezzi!.farmaciaNettoCent,
-    imponibile_cent: r.lotto!.prezzi!.farmaciaNettoCent * r.quantita,
-  }));
+  // Righe acquistate (con eventuali pezzi in sconto merce) e righe di solo omaggio a prezzo zero
+  const righe = carrello.righe.map((r) => {
+    const omaggio = r.omaggio !== null;
+    return {
+      lotto_id: r.lottoId,
+      prodotto_codice: r.prodotto!.codice,
+      prodotto_nome: omaggio ? `${r.prodotto!.nome} (omaggio)` : r.prodotto!.nome,
+      codice_lotto: r.lotto!.codice_lotto,
+      scadenza: r.lotto!.scadenza,
+      quantita: r.quantita,
+      quantita_omaggio: r.quantitaOmaggio,
+      prezzo_pubblico_cent: r.lotto!.prezzi!.pubblicoIvatoCent,
+      iva: r.prodotto!.iva,
+      sconto_applicato: omaggio ? 100 : r.lotto!.sconto!.sconto,
+      origine_sconto: omaggio ? "promozione" : r.lotto!.sconto!.origine,
+      promozione_id: omaggio ? r.omaggio!.promozioneId : (r.lotto!.sconto!.promozioneId ?? r.promozioneMerceId ?? null),
+      prezzo_pubblico_netto_cent: r.lotto!.prezzi!.pubblicoNettoCent,
+      prezzo_farmacia_ivato_cent: omaggio ? 0 : r.lotto!.prezzi!.farmaciaIvatoCent,
+      prezzo_farmacia_netto_cent: omaggio ? 0 : r.lotto!.prezzi!.farmaciaNettoCent,
+      imponibile_cent: omaggio ? 0 : r.lotto!.prezzi!.farmaciaNettoCent * r.quantita,
+    };
+  });
 
   const scade = fineGiornoRoma(aggiungiGiorniLavorativi(catalogo.oggi, catalogo.impostazioni.giorni_validita_prenotazione));
   const admin = creaClientAdmin();

@@ -63,7 +63,7 @@ export type ScontoLotto = { sconto: number; origine: OrigineSconto; fascia: numb
 
 /**
  * Sconto che vale per un lotto: sconto manuale del lotto se c'è, altrimenti la fascia di scadenza.
- * Se c'è una promozione attiva vale il migliore dei due, non la somma (§4).
+ * Se ci sono una promozione attiva o uno sconto del listino di gruppo vale il migliore, non la somma (§4).
  */
 export function scontoPerLotto(opzioni: {
   scadenza: DataISO;
@@ -71,6 +71,7 @@ export function scontoPerLotto(opzioni: {
   fasce: Fascia[];
   scontoManuale?: number | null;
   promozione?: { id: string; sconto: number } | null;
+  scontoGruppo?: number | null;
 }): ScontoLotto | null {
   const fascia = fasciaPerScadenza(opzioni.scadenza, opzioni.oggi, opzioni.fasce);
   if (!fascia) return null;
@@ -78,6 +79,9 @@ export function scontoPerLotto(opzioni: {
     opzioni.scontoManuale != null
       ? { sconto: opzioni.scontoManuale, origine: "lotto", fascia: fascia.numero }
       : { sconto: fascia.sconto_percentuale, origine: "fascia", fascia: fascia.numero };
+  if (opzioni.scontoGruppo != null && opzioni.scontoGruppo > migliore.sconto) {
+    migliore = { sconto: opzioni.scontoGruppo, origine: "listino_gruppo", fascia: fascia.numero };
+  }
   if (opzioni.promozione && opzioni.promozione.sconto > migliore.sconto) {
     migliore = { sconto: opzioni.promozione.sconto, origine: "promozione", fascia: fascia.numero, promozioneId: opzioni.promozione.id };
   }

@@ -4,6 +4,7 @@ import { BadgeSconto, BadgeStatoProdotto } from "@/components/catalogo/Etichette
 import { richiediFarmaciaAttiva } from "@/lib/auth";
 import { caricaCatalogo } from "@/lib/catalogo";
 import { formattaData, formattaEuro } from "@/lib/formato";
+import { descriviPromozione } from "@/lib/promozioni";
 import { creaClientServer } from "@/lib/supabase/server";
 import { AggiungiLotto } from "./AggiungiLotto";
 
@@ -16,15 +17,16 @@ const STATI_LOTTO: Record<string, string> = {
 };
 
 export default async function SchedaProdotto({ params }: { params: Promise<{ codice: string }> }) {
-  await richiediFarmaciaAttiva();
+  const { farmaciaId } = await richiediFarmaciaAttiva();
   const { codice } = await params;
   if (!/^\d{9}$/.test(codice)) notFound();
   const db = await creaClientServer();
-  const catalogo = await caricaCatalogo(db, { codice });
+  const catalogo = await caricaCatalogo(db, { codice, farmaciaId });
   const p = catalogo.prodotti[0];
   if (!p) notFound();
 
   const ivaTesto = `${p.iva.toLocaleString("it-IT")}%`;
+  const promo = [...new Map(p.lotti.flatMap((l) => l.promoMerce.map((m) => [m.id, { ...m, lotti: p.lotti.filter((x) => x.promoMerce.some((y) => y.id === m.id)).length }]))).values()];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
@@ -68,6 +70,19 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
         </div>
         {p.descrizione && <p className="sm:col-span-4">{p.descrizione}</p>}
       </section>
+
+      {promo.length > 0 && (
+        <section className="avviso avviso-ok" aria-label="Promozioni in corso">
+          {promo.map((m) => (
+            <p key={m.id}>
+              <span className="pill pill-ok mr-2">Promozione</span>
+              <strong>{m.nome}</strong>: {descriviPromozione(m)}
+              {m.lotti < p.lotti.length && " (solo su alcuni lotti)"}.
+            </p>
+          ))}
+        </section>
+      )}
+      {p.prezzoDiGruppo && <p className="avviso avviso-info">Prezzo al pubblico del listino riservato al tuo gruppo.</p>}
 
       {p.stato === "mancante_temporaneamente" && (
         <p className="avviso avviso-errore">

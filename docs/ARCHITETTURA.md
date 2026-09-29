@@ -85,7 +85,17 @@ tests/               Vitest + Playwright
 - `/area` porta ognuno alla propria area in base al ruolo.
 - Email transazionali del portale (`lib/email`): Brevo se c'è `BREVO_API_KEY`, altrimenti in sviluppo la casella di prova locale Mailpit (http://127.0.0.1:54324).
 
+## Fase 3 – aggiunte al database
+- `modalita_pagamento_limiti` (modalità → gruppo o farmacia) e funzione `modalita_consentite_farmacia(farmacia)`.
+- `listini_gruppo` (gruppo, prodotto, prezzo al pubblico e/o sconto riservato).
+- `promozioni` (tipo, parametri, ambito, gruppo, inizio/fine, sospesa, duplicata_da); funzioni pure in `lib/promozioni.ts`.
+- `invii_deposito`, `spedizioni` (DDT, PDF in Storage `ddt` privato, fatturato), `righe_spedizione` (lotto e quantità realmente spediti).
+- `disponibilita_lotti` ora sottrae anche lo spedito dopo la data della giacenza; `modifica_ordine_admin` modifica un ordine con i lotti bloccati.
+- Storico anche per prodotti, sconti sui lotti, spedizioni e promozioni. `import_magazzino.contenuto` conserva il file letto tra anteprima e conferma.
+- Documenti: `lib/documents/richiesta-evasione.tsx` (PDF con @react-pdf/renderer + Excel), `lib/documents/excel-magazzino.ts`; invio in `lib/deposito/invio.ts`; fatturazione in `lib/fatturazione.ts`.
+
 ## Job pianificati (Vercel Cron)
+- Ogni 15 minuti: `/api/cron/scadenze` (prenotazioni scadute) e `/api/cron/deposito` (invio cumulativo all'orario impostato, sollecito DDT mancanti). Entrambi protetti da `CRON_SECRET`.
 - Ogni 15 minuti: scadenza prenotazioni non confermate; attivazione/disattivazione promozioni.
 - All'orario impostato: invio cumulativo a ciascun deposito.
 - Il 1° di ogni mese: attivazione degli sconti privati del mese e chiusura dei precedenti; 5 giorni prima di fine mese: promemoria all'admin se il mese successivo non ha sconti privati.

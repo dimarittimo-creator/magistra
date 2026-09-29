@@ -1,0 +1,7 @@
+# Fine riga uniforme (LF) per tutti i file di testo del progetto
+* text=auto eol=lf
+*.xls binary
+*.xlsx binary
+*.jpg binary
+*.png binary
+*.pdf binary

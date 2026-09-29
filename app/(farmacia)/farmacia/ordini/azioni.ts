@@ -15,7 +15,7 @@ import { creaClientServer } from "@/lib/supabase/server";
 export async function ripetiOrdine(ordineId: string): Promise<StatoModulo> {
   const { farmaciaId } = await richiediFarmaciaAttiva();
   const db = await creaClientServer();
-  const [ordine, catalogo, carrello] = await Promise.all([leggiOrdine(db, ordineId), caricaCatalogo(db), leggiRigheCarrello(db, farmaciaId)]);
+  const [ordine, catalogo, carrello] = await Promise.all([leggiOrdine(db, ordineId), caricaCatalogo(db, { farmaciaId }), leggiRigheCarrello(db, farmaciaId)]);
   if (!ordine || ordine.farmacia_id !== farmaciaId) return { messaggio: "Ordine non trovato." };
 
   const nelCarrello = new Map(carrello.map((r) => [r.lotto_id, r.quantita]));
@@ -23,6 +23,7 @@ export async function ripetiOrdine(ordineId: string): Promise<StatoModulo> {
   let aggiunte = 0;
 
   for (const r of ordine.righe) {
+    if (r.quantita === 0) continue; // riga di solo omaggio: torna da sola se la promozione è ancora attiva
     const prodotto = catalogo.prodotti.find((p) => p.codice === r.prodotto_codice);
     const vendibili = prodotto?.lotti.filter((l) => l.stato === "vendibile" && l.prezzi) ?? [];
     const libero = (id: string, disponibile: number) => disponibile - (nelCarrello.get(id) ?? 0);
