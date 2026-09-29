@@ -2,7 +2,7 @@
 
 _Aggiornato da Claude Code a fine di ogni sessione._
 
-- [ ] Fase 0 – Preparazione — **in corso** (29/09/2026): Node.js e Git installati, sito avviato in locale e controllato (desktop, smartphone, modalità scura), test verdi, primo commit fatto. Manca solo il database locale: servono WSL e Docker Desktop.
+- [x] Fase 0 – Preparazione — **completata** (29/09/2026), in attesa dell'ok di Salvatore: Node.js, Git, WSL e Docker Desktop installati; database locale avviato con le due società (con IBAN), le quattro sedi e l'operatore CIENNE collegato al deposito predefinito; test verdi.
 - [ ] Fase 1 – Registrazione, accesso, società e sedi
 - [ ] Fase 2 – Catalogo e prenotazione farmacie
 - [ ] Fase 3 – Amministrazione e spedizioni al deposito
@@ -22,6 +22,7 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 1. `npm install`
 2. `npm run db:start` (Docker Desktop deve essere aperto) e poi `npm run db:env`
 3. `npm run dev` → http://localhost:3000 e http://localhost:3000/prova
+4. Pannello del database locale (Supabase Studio): http://localhost:54323
 
 ## Punti da chiarire (emersi in Fase 0)
 - `verifica_prezzi_attesi.xlsx` calcola il prezzo farmacia IVA esclusa in un solo passaggio (pubblico × (1 − sconto) ÷ (1 + IVA)), mentre `REGOLE_COMMERCIALI.md` arrotonda prima il prezzo IVA inclusa. Su alcuni lotti può esserci 1 centesimo di differenza: da verificare in Fase 2.
