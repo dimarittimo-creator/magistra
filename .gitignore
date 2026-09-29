@@ -25,3 +25,10 @@ supabase/.temp
 Thumbs.db
 desktop.ini
 *.zip
+
+# Credenziali degli utenti di prova locali
+credenziali-test.txt
+
+# Risultati dei test Playwright
+/test-results/
+/playwright-report/

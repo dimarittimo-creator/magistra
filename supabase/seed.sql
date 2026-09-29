@@ -45,3 +45,34 @@ from (values
   ('bioeleva', 'legale', 'Sede legale Bioeleva', 'Viale Antonio Gramsci, 21', '80122', 'Napoli', 'NA', null, null, false, null)
 ) as v(codice_societa, tipo, nome, indirizzo, cap, citta, provincia, telefono, email, predefinito, note)
 join public.societa s on s.codice = v.codice_societa;
+
+-- Testi legali provvisori (docs/CONFORMITA.md): segnaposto evidenti finché il gruppo
+-- non fornisce i testi validati dal legale. Si sostituiscono creando una nuova versione.
+insert into public.documenti_legali (tipo, versione, titolo, provvisorio, testo) values
+('privacy', 1, 'Informativa sul trattamento dei dati personali', true,
+$$**TESTO PROVVISORIO – in attesa del testo definitivo del consulente privacy.**
+
+Titolari del trattamento: SAGE' PHARMA S.r.l. e BIOELEVA S.r.l., Viale Antonio Gramsci, 21 – 80122 Napoli (NA). Il rapporto tra le due società (contitolari oppure titolare e responsabile) sarà indicato nel testo definitivo.
+
+Finalità: gestione della registrazione al portale Magistra, delle prenotazioni d'ordine, delle spedizioni e degli adempimenti fiscali; assistenza ai clienti; invio di comunicazioni commerciali solo con consenso separato e facoltativo.
+
+Dati trattati: dati anagrafici e fiscali, recapiti, indirizzi di consegna e fatturazione, storico ordini, dati tecnici di accesso (data, ora, indirizzo IP).
+
+Conservazione: per il tempo necessario al rapporto commerciale e agli obblighi di legge.
+
+Fornitori che trattano dati per conto delle società: servizi di hosting e database in Unione Europea, servizio di invio email.
+
+Diritti: accesso, rettifica, cancellazione, limitazione, portabilità, opposizione e reclamo al Garante per la protezione dei dati personali, scrivendo alle PEC delle società.$$),
+('condizioni_farmacie', 1, 'Condizioni di vendita per le farmacie', true,
+$$**TESTO PROVVISORIO – versione definitiva da confermare dal gruppo.**
+
+1. **In nessun caso sono previsti resi.**
+2. **La merce viaggia a rischio e pericolo dell'acquirente.** Si consiglia di controllare i colli alla consegna e di annotare eventuali danni sul documento del corriere.
+3. **Tempi di consegna:** dipendono dall'andamento del magazzino; in linea di massima la consegna avviene entro i giorni lavorativi indicati nel carrello dalla conferma dell'ordine. Il termine è indicativo e non garantito.
+4. La modalità di pagamento è quella indicata nell'ordine.
+5. La società che fattura e consegna (Sagè Pharma S.r.l. o Bioeleva S.r.l.) è quella indicata nell'ordine.
+6. Le prenotazioni inviate tramite Magistra non sono vincolanti: l'ordine diventa definitivo solo dopo la conferma della società.$$),
+('condizioni_privati', 1, 'Condizioni di vendita per i privati', true,
+$$**TESTO PROVVISORIO – da sostituire con le condizioni validate da un legale (Codice del Consumo).**
+
+L'area Privati non è ancora attiva.$$);

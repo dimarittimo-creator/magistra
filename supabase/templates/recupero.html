@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="it">
+  <body style="margin:0;padding:24px;background:#f6f7f7;font-family:Arial,Helvetica,sans-serif;color:#1d2427">
+    <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #dfe4e6;border-radius:12px;padding:28px">
+      <p style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:26px;color:#022976">Magistra</p>
+      <div style="width:48px;height:2px;background:#b0652a;margin:0 0 20px"></div>
+      <p style="font-size:16px;line-height:1.5">
+        Abbiamo ricevuto una richiesta per reimpostare la password del tuo account Magistra.
+      </p>
+      <p style="margin:28px 0">
+        <a href="{{ .SiteURL }}/auth/conferma?token_hash={{ .TokenHash }}&type=recovery&next=/nuova-password"
+           style="background:#022976;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">
+          Scegli una nuova password
+        </a>
+      </p>
+      <p style="font-size:14px;line-height:1.5;color:#5a6a70">
+        Il link vale 1 ora. Se non hai richiesto tu il cambio password, ignora questa email: la password attuale resta valida.
+      </p>
+      <hr style="border:none;border-top:1px solid #dfe4e6;margin:24px 0" />
+      <p style="font-size:13px;color:#5a6a70;margin:0">
+        <em style="color:#022976">Magistra – Semplicemente Magistrale</em><br />
+        Sagè Pharma S.r.l. · Bioeleva S.r.l.
+      </p>
+    </div>
+  </body>
+</html>
