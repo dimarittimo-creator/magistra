@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { BadgeStatoOrdine, DettaglioOrdine } from "@/components/ordini/DettaglioOrdine";
 import { richiediFarmaciaAttiva } from "@/lib/auth";
 import { formattaDataOra } from "@/lib/formato";
-import { leggiOrdine } from "@/lib/ordini/lettura";
+import { leggiOrdine, leggiSpedizione } from "@/lib/ordini/lettura";
 import { creaClientServer } from "@/lib/supabase/server";
 import { RipetiOrdine } from "./RipetiOrdine";
 
@@ -16,6 +16,7 @@ export default async function PaginaOrdine({ params, searchParams }: { params: P
   const db = await creaClientServer();
   const ordine = await leggiOrdine(db, id);
   if (!ordine || ordine.farmacia_id !== farmaciaId) notFound();
+  const spedizione = await leggiSpedizione(db, id);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
@@ -40,7 +41,7 @@ export default async function PaginaOrdine({ params, searchParams }: { params: P
         </div>
         <RipetiOrdine ordineId={ordine.id} />
       </header>
-      <DettaglioOrdine ordine={ordine} vista="farmacia" />
+      <DettaglioOrdine ordine={ordine} vista="farmacia" spedizione={spedizione} />
     </div>
   );
 }

@@ -74,15 +74,20 @@ export function festivo(data: DataISO): boolean {
   return data === aggiungiGiorni(pasqua(a), 1); // Lunedì dell'Angelo
 }
 
-/** Fine della giornata (23:59:59) nel fuso di Roma, come istante ISO. */
-export function fineGiornoRoma(data: DataISO): string {
+/** Istante ISO di un orario di un giorno nel fuso di Roma (ora legale o solare). */
+export function istanteRoma(data: DataISO, orario: string): string {
   const [a, m, g] = parti(data);
   const mezzogiorno = new Date(Date.UTC(a, m - 1, g, 12));
   const scarto = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Rome", timeZoneName: "longOffset" })
     .formatToParts(mezzogiorno)
     .find((p) => p.type === "timeZoneName")!
     .value.replace("GMT", "");
-  return new Date(`${data}T23:59:59${scarto || "+00:00"}`).toISOString();
+  return new Date(`${data}T${orario}${scarto || "+00:00"}`).toISOString();
+}
+
+/** Fine della giornata (23:59:59) nel fuso di Roma. */
+export function fineGiornoRoma(data: DataISO): string {
+  return istanteRoma(data, "23:59:59");
 }
 
 /** Data dopo N giorni lavorativi (esclusi sabato, domenica e festività nazionali). */

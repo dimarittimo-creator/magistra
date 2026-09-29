@@ -98,6 +98,86 @@ export function emailNuovoOrdineAdmin(a: string[], o: Ordine): Email {
   );
 }
 
+export type DatiSpedizioneEmail = { ddt_numero: string; ddt_data: string; corriere: string | null; tracking: string | null; colli: number | null; differenze: string[] };
+
+const TESTI_STATO: Partial<Record<Ordine["stato"], (numero: string) => string>> = {
+  in_verifica: (n) => `stiamo verificando la prenotazione <strong>${n}</strong>.`,
+  confermato: (n) => `l'ordine <strong>${n}</strong> è <strong>confermato</strong>. Lo prepareremo e ti avviseremo alla spedizione.`,
+  modificato: (n) => `l'ordine <strong>${n}</strong> è stato <strong>confermato con alcune modifiche</strong>: trovi qui sotto il riepilogo aggiornato.`,
+  rifiutato: (n) => `purtroppo non possiamo accettare l'ordine <strong>${n}</strong>. La merce prenotata torna disponibile.`,
+  inviato_deposito: (n) => `l'ordine <strong>${n}</strong> è stato trasmesso al deposito per la preparazione.`,
+  in_preparazione: (n) => `il deposito sta preparando l'ordine <strong>${n}</strong>.`,
+  spedito: (n) => `l'ordine <strong>${n}</strong> è stato <strong>spedito</strong>.`,
+  consegnato: (n) => `l'ordine <strong>${n}</strong> risulta consegnato. Grazie!`,
+};
+
+/** Email alla farmacia a ogni cambio di stato, sempre con la società che fattura e consegna. */
+export function emailCambioStato(o: Ordine, messaggio: string | null, spedizione?: DatiSpedizioneEmail): Email {
+  const c = o.snapshot_cliente;
+  const testo = TESTI_STATO[o.stato]?.(o.numero) ?? `l'ordine <strong>${o.numero}</strong> è ora nello stato «${o.stato}».`;
+  const blocchi: Blocco[] = [`Gentile ${esc(c.titolare)},`, testo];
+  if (messaggio) blocchi.push(`<strong>Messaggio:</strong> ${esc(messaggio)}`);
+  if (spedizione) {
+    blocchi.push(
+      `<strong>DDT n. ${esc(spedizione.ddt_numero)} del ${formattaData(spedizione.ddt_data)}</strong>` +
+        (spedizione.corriere ? `<br />Corriere: ${esc(spedizione.corriere)}` : "") +
+        (spedizione.tracking ? `<br />Tracking: ${esc(spedizione.tracking)}` : "") +
+        (spedizione.colli ? `<br />Colli: ${spedizione.colli}` : ""),
+    );
+    if (spedizione.differenze.length) blocchi.push(`<strong>Differenze rispetto all'ordine:</strong><br />${spedizione.differenze.map(esc).join("<br />")}`);
+    blocchi.push("Alla consegna controlla i colli e annota eventuali danni sul documento del corriere.");
+  }
+  if (o.stato === "modificato") blocchi.push(tabellaRighe(o), datiPagamento(o));
+  blocchi.push(datiSocieta(o));
+  const oggetto: Partial<Record<Ordine["stato"], string>> = {
+    confermato: "confermato",
+    modificato: "confermato con modifiche",
+    rifiutato: "non accettato",
+    spedito: "spedito",
+    consegnato: "consegnato",
+    inviato_deposito: "in preparazione",
+    in_preparazione: "in preparazione",
+    in_verifica: "in verifica",
+  };
+  return componi(c.email, `Magistra – Ordine ${o.numero} ${oggetto[o.stato] ?? "aggiornato"}`, blocchi, {
+    testo: "Vedi l'ordine",
+    url: `${sito()}/farmacia/ordini/${o.id}`,
+  });
+}
+
+/** Richiesta di evasione al deposito: un file PDF + Excel per ogni ordine. */
+export function emailRichiestaEvasione(
+  destinatari: string[],
+  cc: string[],
+  deposito: string,
+  ordini: Ordine[],
+  allegati: NonNullable<Email["allegati"]>,
+): Email {
+  const elenco = ordini
+    .map((o) => `${o.numero} – ${esc(o.snapshot_cliente.ragione_sociale)} (${esc(o.snapshot_cliente.consegna?.citta ?? "")}) – fattura ${esc(o.snapshot_societa.nome_breve)}${o.snapshot_pagamento.contrassegno ? ` – <strong>CONTRASSEGNO ${formattaEuro(o.totale_cent)}</strong>` : ""}`)
+    .join("<br />");
+  const email = componi(
+    destinatari,
+    ordini.length === 1 ? `Richiesta di evasione ordine ${ordini[0].numero}` : `Richiesta di evasione: ${ordini.length} ordini`,
+    [
+      `Buongiorno,`,
+      `vi chiediamo di preparare e spedire ${ordini.length === 1 ? "l'ordine" : "gli ordini"} seguenti dal <strong>${esc(deposito)}</strong>. Per ogni ordine trovate in allegato il PDF e il file Excel con lotti e quantità da prelevare.`,
+      elenco,
+      "Sul DDT il mittente è la società indicata in ogni richiesta. Gli omaggi e lo sconto merce sono su righe separate (causale diversa).",
+      "Grazie, il gruppo Sagè Pharma · Bioeleva",
+    ],
+  );
+  return { ...email, cc, allegati };
+}
+
+export function emailSollecitoDdt(a: string[], ordini: { id: string; numero: string; farmacia: string; inviato: string; deposito: string }[]): Email {
+  return componi(a, `Magistra – ${ordini.length} ordini senza DDT`, [
+    "Questi ordini sono stati inviati al deposito ma non hanno ancora un DDT registrato:",
+    ordini.map((o) => `<a href="${sito()}/admin/ordini/${o.id}">${o.numero}</a> – ${esc(o.farmacia)} – inviato il ${formattaDataOra(o.inviato)} a ${esc(o.deposito)}`).join("<br />"),
+    "Verifica con il deposito e registra il DDT sull'ordine.",
+  ]);
+}
+
 export function emailPrenotazioneScaduta(o: Pick<Ordine, "id" | "numero" | "snapshot_cliente">): Email {
   const c = o.snapshot_cliente;
   return componi(

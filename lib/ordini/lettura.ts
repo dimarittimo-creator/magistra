@@ -112,6 +112,38 @@ export async function leggiOrdine(db: SupabaseClient, id: string): Promise<Ordin
   return o;
 }
 
+export type Spedizione = {
+  id: string;
+  ddt_numero: string;
+  ddt_data: string;
+  corriere: string | null;
+  tracking: string | null;
+  colli: number | null;
+  ddt_pdf_path: string | null;
+  fatturato: boolean;
+  righe: { riga_ordine_id: string | null; codice_lotto: string; quantita_spedita: number; nota_differenza: string | null }[];
+};
+
+export async function leggiSpedizione(db: SupabaseClient, ordineId: string): Promise<Spedizione | null> {
+  const { data } = await db
+    .from("spedizioni")
+    .select("id, ddt_numero, ddt_data, corriere, tracking, colli, ddt_pdf_path, fatturato, righe:righe_spedizione(riga_ordine_id, codice_lotto, quantita_spedita, nota_differenza)")
+    .eq("ordine_id", ordineId)
+    .maybeSingle();
+  return (data as Spedizione | null) ?? null;
+}
+
+/** Righe spedite diverse da quelle ordinate (quantità o lotto). */
+export function differenzeSpedizione(o: Ordine, s: Spedizione): string[] {
+  return o.righe.flatMap((r) => {
+    const sp = s.righe.find((x) => x.riga_ordine_id === r.id);
+    if (!sp) return [];
+    const ordinati = r.quantita + r.quantita_omaggio;
+    if (sp.quantita_spedita === ordinati && sp.codice_lotto === r.codice_lotto) return [];
+    return [`${r.prodotto_nome}: ordinati ${ordinati} (lotto ${r.codice_lotto}), spediti ${sp.quantita_spedita} (lotto ${sp.codice_lotto})${sp.nota_differenza ? ` – ${sp.nota_differenza}` : ""}`];
+  });
+}
+
 export function formattaIndirizzoSnapshot(i: IndirizzoSnapshot | null): string {
   if (!i) return "—";
   return `${i.presso ? `c/o ${i.presso}, ` : ""}${i.indirizzo} – ${i.cap} ${i.citta} (${i.provincia})`;

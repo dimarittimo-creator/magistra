@@ -12,11 +12,15 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     { href: "/admin/prodotti", testo: "Prodotti" },
     ...(admin
       ? [
+          { href: "/admin/fatturazione", testo: "Fatturazione" },
           { href: "/admin/magazzino", testo: "Magazzino" },
           { href: "/admin/sconti", testo: "Sconti e prezzi" },
           { href: "/admin/gruppi", testo: "Gruppi" },
+          { href: "/admin/pagamenti", testo: "Pagamenti" },
+          { href: "/admin/documenti", testo: "Condizioni e privacy" },
           { href: "/admin/societa", testo: "Società" },
           { href: "/admin/sedi", testo: "Sedi e depositi" },
+          { href: "/admin/impostazioni", testo: "Impostazioni" },
           { href: "/admin/registro", testo: "Registro operazioni" },
         ]
       : []),

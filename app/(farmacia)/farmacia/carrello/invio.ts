@@ -37,7 +37,7 @@ export async function inviaPrenotazione(_prima: StatoInvio, fd: FormData): Promi
   const note = leggi(fd, "note").slice(0, 1000);
   const condizioniId = leggi(fd, "condizioni_documento_id");
 
-  const [catalogo, salvate, farmacia, { data: societa }, { data: pagamento }, { data: condizioni }] = await Promise.all([
+  const [catalogo, salvate, farmacia, { data: societa }, { data: pagamento }, { data: condizioni }, { data: consentite }] = await Promise.all([
     caricaCatalogo(db),
     leggiRigheCarrello(db, utente.farmaciaId),
     leggiFarmacia(db, utente.farmaciaId),
@@ -48,10 +48,12 @@ export async function inviaPrenotazione(_prima: StatoInvio, fd: FormData): Promi
       ? db.from("modalita_pagamento").select("*").eq("id", pagamentoId).eq("attiva", true).in("canale", ["farmacie", "entrambi"]).maybeSingle()
       : Promise.resolve({ data: null }),
     db.rpc("documento_legale_corrente", { p_tipo: "condizioni_farmacie" }),
+    db.rpc("modalita_consentite_farmacia", { p_farmacia: utente.farmaciaId }),
   ]);
 
   if (!societa) errori.societa_id = "Scegli la società che fattura e consegna";
   if (!pagamento) errori.modalita_pagamento_id = "Scegli la modalità di pagamento";
+  else if (!((consentite ?? []) as string[]).includes(pagamento.id)) errori.modalita_pagamento_id = "Questa modalità di pagamento non è disponibile per la tua farmacia";
   if (pagamento?.richiede_iban && societa && !(societa.iban && ibanValido(societa.iban))) {
     errori.modalita_pagamento_id = `Il bonifico non è disponibile con ${societa.nome_breve}: scegli un'altra modalità`;
   }

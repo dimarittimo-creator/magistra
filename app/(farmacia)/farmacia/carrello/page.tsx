@@ -17,14 +17,17 @@ export const metadata = { title: "Carrello" };
 export default async function Carrello() {
   const utente = await richiediFarmaciaAttiva();
   const db = await creaClientServer();
-  const [catalogo, salvate, condizioni, { data: societa }, { data: pagamenti }, { data: farmacia }] = await Promise.all([
+  const [catalogo, salvate, condizioni, { data: societa }, { data: pagamenti }, { data: farmacia }, { data: consentite }] = await Promise.all([
     caricaCatalogo(db),
     leggiRigheCarrello(db, utente.farmaciaId),
     documentoCorrente("condizioni_farmacie"),
     db.from("societa").select("*").eq("attiva", true).eq("attiva_farmacie", true).order("predefinita", { ascending: false }),
     db.from("modalita_pagamento").select("id, descrizione, richiede_iban, contrassegno").eq("attiva", true).in("canale", ["farmacie", "entrambi"]).order("ordine"),
     db.from("farmacie").select("societa_predefinita_id").eq("id", utente.farmaciaId).single(),
+    db.rpc("modalita_consentite_farmacia", { p_farmacia: utente.farmaciaId }),
   ]);
+  // Modalità limitate ad altre farmacie o gruppi non compaiono
+  const idConsentiti = new Set((consentite ?? []) as string[]);
   const carrello = verificaCarrello(catalogo, salvate);
   const t = carrello.totali;
 
@@ -132,7 +135,7 @@ export default async function Carrello() {
           <FormInvio
             societa={elencoSocieta}
             societaPredefinitaId={predefinita}
-            pagamenti={pagamenti ?? []}
+            pagamenti={(pagamenti ?? []).filter((p) => idConsentiti.has(p.id))}
             condizioniId={condizioni.id}
             condizioniVersione={condizioni.versione}
             testoCondizioni={<TestoLegale documento={condizioni} />}

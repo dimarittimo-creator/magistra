@@ -38,19 +38,22 @@ export default async function OrdiniAdmin({ searchParams }: { searchParams: Prom
           <span className="filetto" aria-hidden="true" />
         </h1>
         <p className="mt-4 text-muted max-w-3xl">
-          Prenotazioni delle farmacie. Conferma, modifica, rifiuto e invio al deposito arrivano con la prossima fase.
+          Prenotazioni delle farmacie: apri un ordine per confermarlo, modificarlo, rifiutarlo, inviarlo al deposito o registrare il DDT.
         </p>
       </header>
 
       <nav aria-label="Filtra per stato" className="flex flex-wrap gap-2">
         <Link href="/admin/ordini" aria-current={!filtro ? "page" : undefined} className={`btn btn-piccolo ${!filtro ? "btn-primary" : "btn-secondary"}`}>Tutti</Link>
-        {(["inviato", "confermato", "scaduto", "rifiutato"] as StatoOrdine[]).map((s) => (
+        {(["inviato", "in_verifica", "confermato", "modificato", "inviato_deposito", "in_preparazione", "spedito", "consegnato", "rifiutato", "scaduto"] as StatoOrdine[]).map((s) => (
           <Link key={s} href={`/admin/ordini?stato=${s}`} aria-current={filtro === s ? "page" : undefined}
             className={`btn btn-piccolo ${filtro === s ? "btn-primary" : "btn-secondary"}`}>
             {ETICHETTE_STATO_ORDINE[s].testo}
           </Link>
         ))}
       </nav>
+      <p>
+        <a href={`/api/admin/ordini/export${filtro ? `?stato=${filtro}` : ""}`} className="btn btn-secondary btn-piccolo">Esporta in Excel</a>
+      </p>
 
       <div className="panel p-4 sm:p-6 overflow-x-auto">
         {ordini.length === 0 ? (

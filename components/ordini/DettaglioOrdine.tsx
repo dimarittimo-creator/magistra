@@ -1,5 +1,5 @@
 import { formattaData, formattaDataOra, formattaEuro } from "@/lib/formato";
-import { formattaIndirizzoSnapshot, type Ordine } from "@/lib/ordini/lettura";
+import { differenzeSpedizione, formattaIndirizzoSnapshot, type Ordine, type Spedizione } from "@/lib/ordini/lettura";
 import { ETICHETTE_STATO_ORDINE } from "@/lib/ordini/stati";
 import { formattaIban } from "@/lib/validazione";
 
@@ -10,14 +10,40 @@ export function BadgeStatoOrdine({ stato }: { stato: Ordine["stato"] }) {
   return <span className={`pill ${e.classe}`}>{e.testo}</span>;
 }
 
-export function DettaglioOrdine({ ordine: o, vista }: { ordine: Ordine; vista: "farmacia" | "admin" }) {
+export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { ordine: Ordine; vista: "farmacia" | "admin"; spedizione?: Spedizione | null; azioniDdt?: React.ReactNode }) {
   const s = o.snapshot_societa;
   const c = o.snapshot_cliente;
   const p = o.snapshot_pagamento;
   const inAttesa = o.stato === "inviato" || o.stato === "in_verifica";
+  const differenze = spedizione ? differenzeSpedizione(o, spedizione) : [];
 
   return (
     <div className="space-y-6">
+      {spedizione && (
+        <section className="panel p-5 border-slate" aria-labelledby="t-spedizione">
+          <h2 id="t-spedizione" className="text-lg font-serif text-magistra-blu mb-2">Spedizione</h2>
+          <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2 text-sm">
+            <p><span className="text-muted">DDT</span> <strong>n. {spedizione.ddt_numero} del {formattaData(spedizione.ddt_data)}</strong></p>
+            {spedizione.corriere && <p><span className="text-muted">Corriere</span> {spedizione.corriere}</p>}
+            {spedizione.tracking && <p><span className="text-muted">Tracking</span> {spedizione.tracking}</p>}
+            {spedizione.colli && <p><span className="text-muted">Colli</span> {spedizione.colli}</p>}
+          </div>
+          {differenze.length > 0 && (
+            <div className="avviso avviso-attenzione mt-3 text-sm">
+              <p className="font-semibold">Differenze rispetto all&apos;ordine</p>
+              <ul className="list-disc pl-5">{differenze.map((d) => <li key={d}>{d}</li>)}</ul>
+            </div>
+          )}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {spedizione.ddt_pdf_path ? (
+              <a href={`/api/ordini/${o.id}/ddt`} className="btn btn-secondary btn-piccolo">Scarica il DDT (PDF)</a>
+            ) : (
+              <p className="text-sm text-muted">Il PDF del DDT sarà disponibile appena caricato.</p>
+            )}
+            {azioniDdt}
+          </div>
+        </section>
+      )}
       {inAttesa && o.scade_il && (
         <p className="avviso avviso-info">
           Prenotazione non vincolante in attesa di conferma. Se non viene confermata entro il <strong>{formattaDataOra(o.scade_il)}</strong> scade e
