@@ -78,10 +78,75 @@ export async function creaAdminTemporaneo() {
   return { email, password: pwd, elimina: () => db.auth.admin.deleteUser(data.user.id) };
 }
 
-/** Cancella farmacia e account creati da un test (solo database locale). */
+/** Cancella farmacia, ordini e account creati da un test (solo database locale). */
 export async function eliminaFarmaciaDiTest(email: string) {
   const { data: profilo } = await db.from("profili_utente").select("id, farmacia_id").eq("email", email).maybeSingle();
   if (!profilo) return;
+  if (profilo.farmacia_id) await db.from("ordini").delete().eq("farmacia_id", profilo.farmacia_id);
   await db.auth.admin.deleteUser(profilo.id);
   if (profilo.farmacia_id) await db.from("farmacie").delete().eq("id", profilo.farmacia_id);
+}
+
+/** Farmacia già approvata, con email confermata, pronta per ordinare. */
+export async function creaFarmaciaAttiva(nome: string) {
+  const id = suffisso();
+  const email = `e2e-${nome.toLowerCase().replace(/\W+/g, "-")}-${id}@magistra.test`;
+  const pwd = password();
+  const { data, error } = await db.auth.admin.createUser({ email, password: pwd, email_confirm: true });
+  if (error) throw error;
+  const piva = partitaIva();
+  const indirizzo = { indirizzo: "Via Roma 1", cap: "80100", citta: "Napoli", provincia: "NA" };
+  const { data: farmaciaId, error: e2 } = await db.rpc("registra_farmacia", {
+    p_utente: data.user.id,
+    p_email: email,
+    p_farmacia: { ragione_sociale: `${nome} ${id}`, titolare: "Titolare di prova", partita_iva: piva, codice_fiscale: piva, sdi: "ABC1234", telefono: "081 1234567" },
+    p_consegna: indirizzo,
+    p_fatturazione: indirizzo,
+    p_marketing: false,
+    p_ip: null,
+    p_user_agent: "e2e",
+  });
+  if (e2) throw e2;
+  await db.from("farmacie").update({ stato: "attiva", approvata_il: new Date().toISOString() }).eq("id", farmaciaId);
+  return { email, password: pwd, farmaciaId: farmaciaId as string, ragioneSociale: `${nome} ${id}`, elimina: () => eliminaFarmaciaDiTest(email) };
+}
+
+/**
+ * Prodotto con un solo lotto sul deposito predefinito (prezzo 20,00 €, scadenza fra un anno).
+ * I codici dei prodotti di prova iniziano con 000: non esistono minsan reali così.
+ */
+export async function creaProdottoDiTest(giacenza: number) {
+  const codice = `000${String(Date.now()).slice(-6)}`;
+  const codiceLotto = `E2E-${suffisso()}`;
+  const { data: deposito } = await db.from("sedi").select("id").eq("predefinito", true).single();
+  const scadenza = new Date();
+  scadenza.setFullYear(scadenza.getFullYear() + 1);
+  const oggi = new Date().toISOString().slice(0, 10);
+  const { error: e0 } = await db.from("prodotti").insert({ codice, nome: `Prodotto di prova ${codice}`, prezzo_pubblico_cent: 2000 });
+  if (e0) throw e0;
+  await db.from("giacenze_prodotto").insert({ prodotto_codice: codice, deposito_id: deposito!.id, totale_dichiarato: giacenza, data_giacenza: oggi });
+  const { data: lotto, error } = await db
+    .from("lotti")
+    .insert({ prodotto_codice: codice, deposito_id: deposito!.id, codice_lotto: codiceLotto, scadenza: scadenza.toISOString().slice(0, 10), giacenza, data_giacenza: oggi })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return {
+    codice,
+    codiceLotto,
+    lottoId: lotto.id as string,
+    elimina: async () => {
+      await db.from("carrello_righe").delete().eq("lotto_id", lotto.id);
+      await db.from("lotti").delete().eq("id", lotto.id);
+      await db.from("giacenze_prodotto").delete().eq("prodotto_codice", codice);
+      await db.from("prodotti").delete().eq("codice", codice);
+    },
+  };
+}
+
+/** Compila il modulo di invio del carrello. */
+export async function compilaInvio(page: Page, opzioni: { societa?: "Sagè Pharma" | "Bioeleva"; pagamento?: string; accetta?: boolean }) {
+  if (opzioni.societa) await page.getByRole("radio", { name: new RegExp(opzioni.societa) }).check();
+  if (opzioni.pagamento) await page.getByLabel("Modalità di pagamento").selectOption({ label: opzioni.pagamento });
+  if (opzioni.accetta) await page.getByLabel("Ho letto e accetto").check();
 }
