@@ -17,8 +17,20 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
   const inAttesa = o.stato === "inviato" || o.stato === "in_verifica";
   const differenze = spedizione ? differenzeSpedizione(o, spedizione) : [];
 
+  const ddtReale = Boolean(spedizione?.ddt_pdf_path);
+
   return (
     <div className="space-y-6">
+      <nav aria-label="Documenti dell'ordine" className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted mr-1">Documenti:</span>
+        <a href={`/api/ordini/${o.id}/documento/pdf`} target="_blank" rel="noreferrer" className="btn btn-secondary btn-piccolo">Riepilogo PDF</a>
+        <a href={`/api/ordini/${o.id}/documento/excel`} className="btn btn-secondary btn-piccolo">Riepilogo Excel</a>
+        {ddtReale ? (
+          <a href={`/api/ordini/${o.id}/ddt`} target="_blank" rel="noreferrer" className="btn btn-secondary btn-piccolo">DDT (PDF)</a>
+        ) : (
+          <a href={`/api/ordini/${o.id}/documento/ddt-simulato`} target="_blank" rel="noreferrer" className="btn btn-secondary btn-piccolo">DDT simulato</a>
+        )}
+      </nav>
       {spedizione && (
         <section className="panel p-5 border-slate" aria-labelledby="t-spedizione">
           <h2 id="t-spedizione" className="text-lg font-serif text-magistra-blu mb-2">Spedizione</h2>

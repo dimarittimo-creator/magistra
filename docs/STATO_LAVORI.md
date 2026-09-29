@@ -5,8 +5,8 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 0 – Preparazione — **completata** (29/09/2026): Node.js, Git, WSL e Docker Desktop installati; database locale avviato con le due società (con IBAN), le quattro sedi e l'operatore CIENNE collegato al deposito predefinito; test verdi.
 - [x] Fase 1 – Registrazione, accesso, società e sedi — **completata** e approvata (29/09/2026).
 - [x] Fase 2 – Catalogo e prenotazione farmacie — **completata** e approvata (29/09/2026).
-- [x] Fase 3 – Amministrazione e spedizioni al deposito — **completata** (29/09/2026), in attesa dell'ok di Salvatore: test verdi (94 Vitest, 21 Playwright), compilazione di produzione riuscita.
-- [ ] Fase 4 – Documenti
+- [x] Fase 3 – Amministrazione e spedizioni al deposito — **completata** e approvata (29/09/2026).
+- [x] Fase 4 – Documenti — **completata** (30/09/2026), in attesa dell'ok di Salvatore: test verdi (94 Vitest, 23 Playwright).
 - [ ] Fase 5 – Area Privati (B2C)
 - [ ] Fase 6 – Chatbot
 - [ ] Fase 7 – Messa online
@@ -43,6 +43,18 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 3. Email ricevute dal portale (casella di prova): http://127.0.0.1:54324
 4. Test automatici: `npm test` e `npm run test:e2e` (il sito deve essere avviato o si avvia da solo).
 5. Amministratore vero per la messa online: `npm run crea-admin -- email "Nome Cognome"`.
+
+## Fase 4 – cosa c'è
+- **Riepilogo d'ordine in PDF ed Excel** (`lib/documents/ordine.tsx`), scaricabile dalla farmacia e dall'amministrazione (pulsanti "Documenti" nel dettaglio ordine): intestazione della **società che fattura** con logo (Sagè Pharma) o segnaposto con il nome (Bioeleva finché non arriva il logo), dati fiscali completi di società e cliente, righe con lotti, scadenze, prezzo al pubblico, sconto, prezzo netto e IVA, totali per aliquota, pagamento (con IBAN per il bonifico), consegna indicativa, condizioni di vendita accettate (versione dell'ordine); logo Magistra piccolo nel piè di pagina "Ordine effettuato tramite Magistra".
+- **DDT simulato** in PDF: mittente = società scelta, luogo di partenza = indirizzo del deposito (senza i dati dell'operatore logistico), destinatario e luogo di destinazione, righe e totali, condizioni di vendita e la dicitura **"Documento non valido ai fini fiscali – prenotazione non vincolante"** in evidenza.
+- **Dopo la spedizione** il DDT reale caricato dall'admin sostituisce il simulato tra i documenti.
+- Gli importi sono quelli salvati nell'ordine: **PDF ed Excel coincidono al centesimo** con il riepilogo (test automatico, anche con due aliquote IVA). **Cambiando società** (modifica dall'admin) cambiano intestazione, dati fiscali e IBAN.
+- La farmacia scarica solo i documenti dei propri ordini.
+- Test: `tests/e2e/fase4.spec.ts`. Per il logo nei documenti si usa `public/brand/logo-sage-pharma-documenti.jpg` (versione leggera); per Bioeleva basta caricare il file e indicarne il percorso nella scheda della società.
+
+### Come provarlo
+1. Accedi come **farmacia.attiva@magistra.test** → **I miei ordini** → apri l'ordine di esempio → **Riepilogo PDF**, **Riepilogo Excel**, **DDT simulato**.
+2. Come admin, **Modifica** dell'ordine → cambia società in Bioeleva → riscarica il PDF: intestazione e dati fiscali sono quelli di Bioeleva.
 
 ## Fase 3 – cosa c'è
 - **Magazzino** (`/admin/magazzino`): import di giacenza del deposito (Crystal `.xls`), listino e modello Magistra con **anteprima** (errori, difformità, lotti senza scadenza o scaduti, codici nuovi, prodotti spariti, giacenza sotto il prenotato) e conferma o annullamento; scelta del deposito e della data; export del magazzino e modello vuoto con legenda (stesso formato, si ricarica così com'è).
