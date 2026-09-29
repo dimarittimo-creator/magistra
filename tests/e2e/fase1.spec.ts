@@ -39,7 +39,6 @@ test("una farmacia si iscrive, non vede prezzi; l'admin la approva; la farmacia 
   await farmacia.goto("/registrazione");
   await farmacia.getByLabel("Ragione sociale").fill(ragioneSociale);
   await farmacia.getByLabel("Partita IVA").fill(partitaIva());
-  await farmacia.getByLabel("Codice identificativo farmacia").fill(`E2E${id}`.slice(0, 20));
   await farmacia.getByLabel("Titolare").fill("Titolare di prova");
   await farmacia.getByLabel("Codice destinatario SDI").fill("ABC1234");
   await farmacia.getByLabel("Email (per accedere").fill(email);
@@ -65,6 +64,10 @@ test("una farmacia si iscrive, non vede prezzi; l'admin la approva; la farmacia 
   await expect(farmacia).toHaveURL("/farmacia");
   await expect(farmacia.getByText("Iscrizione in attesa di approvazione")).toBeVisible();
   await expect(farmacia.getByText("Iscrizione attiva")).toHaveCount(0);
+  // Codice farmacia assegnato dal portale: progressivo numerico da 0100
+  const codice = await farmacia.locator("dt", { hasText: "Codice farmacia" }).locator("xpath=following-sibling::dd[1]").innerText();
+  expect(Number(codice)).toBeGreaterThanOrEqual(100);
+  expect(codice).toMatch(/^\d{4,}$/);
 
   // L'amministrazione riceve la notifica (senza destinatari impostati va a tutti gli admin) e approva
   await attendiEmail(admin.email, `Nuova iscrizione da approvare: ${ragioneSociale}`);
@@ -115,7 +118,6 @@ test("recupero password dall'email", async ({ page }) => {
       titolare: "Titolare",
       partita_iva: piva,
       codice_fiscale: piva,
-      codice_farmacia: `REC${id}`.slice(0, 20),
       sdi: "ABC1234",
       telefono: "081 1234567",
     },

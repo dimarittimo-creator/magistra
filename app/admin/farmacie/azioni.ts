@@ -107,10 +107,7 @@ export async function salvaDatiFarmaciaAdmin(id: string, _prima: StatoModulo, fd
   if (!prima) return ERRORE_GENERICO;
 
   const esito = await aggiornaFarmacia(db, id, dati, consegna, fatturazione);
-  if (esito.errore) {
-    if (esito.codice === "23505") return { valori, errori: { codice_farmacia: "Codice già usato da un'altra farmacia" }, messaggio: "Controlla i campi evidenziati." };
-    return { ...ERRORE_GENERICO, valori };
-  }
+  if (esito.errore) return { ...ERRORE_GENERICO, valori };
 
   await registraOperazione(db, utente.id, {
     azione: "modifica_dati_farmacia",

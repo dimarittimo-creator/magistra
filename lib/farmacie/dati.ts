@@ -24,7 +24,6 @@ export type DatiFarmacia = {
   titolare: string;
   partita_iva: string;
   codice_fiscale: string;
-  codice_farmacia: string;
   sdi: string;
   pec: string;
   email: string;
@@ -62,8 +61,9 @@ function leggiIndirizzo(fd: FormData, prefisso: string, errori: Record<string, s
 
 /**
  * Controlla i dati anagrafici e gli indirizzi.
- * Con `identificativi: false` (profilo della farmacia) ragione sociale, partita IVA,
- * codice fiscale e codice farmacia non si leggono: li modifica solo l'admin.
+ * Con `identificativi: false` (profilo della farmacia) ragione sociale, partita IVA e
+ * codice fiscale non si leggono: li modifica solo l'admin. Il codice farmacia lo assegna
+ * il portale (progressivo da 0100) e non si modifica.
  */
 export function leggiDatiFarmacia(fd: FormData, opzioni: { identificativi: boolean }) {
   const errori: Record<string, string> = {};
@@ -79,13 +79,11 @@ export function leggiDatiFarmacia(fd: FormData, opzioni: { identificativi: boole
     dati.ragione_sociale = leggi(fd, "ragione_sociale");
     dati.partita_iva = leggi(fd, "partita_iva").replace(/\s/g, "").replace(/^IT/i, "");
     dati.codice_fiscale = leggi(fd, "codice_fiscale").replace(/\s/g, "").toUpperCase();
-    dati.codice_farmacia = leggi(fd, "codice_farmacia").replace(/\s/g, "").toUpperCase();
 
     if (!dati.ragione_sociale) errori.ragione_sociale = "Indica la ragione sociale";
     if (!partitaIvaValida(dati.partita_iva)) errori.partita_iva = "Partita IVA non valida (11 cifre)";
     if (!dati.codice_fiscale) dati.codice_fiscale = dati.partita_iva;
     else if (!codiceFiscaleValido(dati.codice_fiscale)) errori.codice_fiscale = "Codice fiscale non valido";
-    if (!/^[A-Z0-9]{3,20}$/.test(dati.codice_farmacia)) errori.codice_farmacia = "Indica il codice identificativo della farmacia";
   }
 
   if (!dati.titolare) errori.titolare = "Indica il nome del titolare";

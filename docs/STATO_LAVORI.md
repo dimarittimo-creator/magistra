@@ -25,11 +25,11 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 4. Pannello del database locale (Supabase Studio): http://localhost:54323
 
 ## Fase 1 – cosa c'è
-- **Iscrizione farmacia** (`/registrazione`): tutti i dati della specifica, controllo di partita IVA, codice fiscale (11 o 16 caratteri), SDI o PEC, CAP e provincia; indirizzo di fatturazione "uguale alla consegna"; consensi privacy e condizioni di vendita obbligatori, marketing facoltativo, salvati con versione, data e IP. Codice farmacia unico.
+- **Iscrizione farmacia** (`/registrazione`): tutti i dati della specifica, controllo di partita IVA, codice fiscale (11 o 16 caratteri), SDI o PEC, CAP e provincia; indirizzo di fatturazione "uguale alla consegna"; consensi privacy e condizioni di vendita obbligatori, marketing facoltativo, salvati con versione, data e IP. Codice farmacia progressivo assegnato dal portale (da 0100).
 - **Conferma email** obbligatoria prima del primo accesso (email in italiano, link valido 1 ora, "invia di nuovo" dalla pagina di accesso).
 - **Stato "in attesa"** finché l'admin non approva: la farmacia entra ma non vede prezzi né disponibilità. Email alla farmacia (richiesta ricevuta, approvata, bloccata) e all'amministrazione (nuova iscrizione).
 - **Accesso, uscita, recupero password** (`/accesso`, `/recupero-password`, `/nuova-password`).
-- **Area farmacia** (`/farmacia`): stato dell'iscrizione e riepilogo dati; **profilo** (`/farmacia/profilo`) con recapiti e indirizzi modificabili (ragione sociale, P.IVA, codice fiscale e codice farmacia solo dall'admin), cambio password, consenso marketing revocabile.
+- **Area farmacia** (`/farmacia`): stato dell'iscrizione e riepilogo dati; **profilo** (`/farmacia/profilo`) con recapiti e indirizzi modificabili (ragione sociale, P.IVA e codice fiscale solo dall'admin; codice farmacia fisso), cambio password, consenso marketing revocabile.
 - **Amministrazione** (`/admin`): cruscotto con iscrizioni da approvare; **farmacie** con filtri e ricerca, scheda con approva / rifiuta / blocca / riattiva, gruppo, società predefinita, note interne, correzione dati, consensi, conferma email, storico; **gruppi**; **società** (modifica con controllo IBAN, una sola predefinita, storico); **sedi e depositi** (nuova sede, modifica, attiva/disattiva, deposito predefinito, operatore logistico, email in copia, storico); **registro operazioni**.
 - L'operatore vede cruscotto ed elenco farmacie, senza poterle modificare.
 - **Testi legali** con versioni (`/privacy`, `/condizioni/farmacie`, `/condizioni/privati`): per ora **testi provvisori** evidenziati in giallo.
@@ -44,9 +44,11 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 4. Test automatici: `npm test` e `npm run test:e2e` (il sito deve essere avviato o si avvia da solo).
 5. Amministratore vero per la messa online: `npm run crea-admin -- email "Nome Cognome"`.
 
+## Decisioni del 29/09/2026 (Fase 1)
+- **Codice farmacia**: lo assegna il portale all'iscrizione, numero progressivo da **0100** in avanti; la farmacia non lo inserisce e non si modifica (migrazione `20260929140000_codice_farmacia_progressivo.sql`).
+- **Avvisi di nuova iscrizione**: a tutti gli utenti admin.
+
 ## Punti da chiarire (emersi in Fase 1)
-- Destinatari delle email "nuova iscrizione": per ora tutti gli utenti admin; si potranno indicare indirizzi specifici nelle impostazioni (campo già pronto, pagina in Fase 3).
-- Codice identificativo della farmacia: accettato come codice alfanumerico da 3 a 20 caratteri; se esiste un formato ufficiale da rispettare (es. 6 cifre), va indicato.
 - Informativa privacy e condizioni di vendita definitive: sostituiscono i testi provvisori creando una nuova versione (pagina admin in Fase 3).
 
 ## Punti da chiarire (emersi in Fase 0)

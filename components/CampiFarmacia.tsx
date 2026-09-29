@@ -28,7 +28,7 @@ export function CampiFarmacia({ valori = {}, errori = {}, identificativi, etiche
         <legend className="text-xl font-serif text-magistra-blu mb-2">Dati della farmacia</legend>
         {bloccati && (
           <p className="aiuto">
-            Ragione sociale, partita IVA, codice fiscale e codice farmacia possono essere modificati solo
+            Ragione sociale, partita IVA e codice fiscale possono essere modificati solo
             dall&apos;amministrazione Magistra: scrivici se devono essere corretti.
           </p>
         )}
@@ -40,9 +40,10 @@ export function CampiFarmacia({ valori = {}, errori = {}, identificativi, etiche
           <Campo nome="codice_fiscale" etichetta="Codice fiscale" disabilitato={bloccati} maiuscolo
             valore={valori.codice_fiscale} errore={errori.codice_fiscale} maxLength={16}
             aiuto={bloccati ? undefined : "Lascia vuoto se coincide con la partita IVA"} />
-          <Campo nome="codice_farmacia" etichetta="Codice identificativo farmacia" obbligatorio={!bloccati} disabilitato={bloccati}
-            valore={valori.codice_farmacia} errore={errori.codice_farmacia} maiuscolo maxLength={20}
-            aiuto={bloccati ? undefined : "Il codice assegnato alla farmacia dal Ministero della Salute / ASL"} />
+          {valori.codice_farmacia && (
+            <Campo nome="codice_farmacia" etichetta="Codice farmacia" disabilitato valore={valori.codice_farmacia}
+              aiuto="Assegnato da Magistra all'iscrizione" />
+          )}
           <Campo nome="titolare" etichetta="Titolare" obbligatorio valore={valori.titolare} errore={errori.titolare} autoComplete="name" />
         </div>
       </fieldset>

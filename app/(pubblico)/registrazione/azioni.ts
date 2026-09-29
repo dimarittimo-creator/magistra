@@ -22,10 +22,6 @@ export async function registraFarmacia(_prima: StatoModulo, fd: FormData): Promi
   if (!fd.get("accetto_condizioni")) errori.accetto_condizioni = "Serve l'accettazione delle condizioni di vendita";
 
   const admin = creaClientAdmin();
-  if (!errori.codice_farmacia) {
-    const { data: esistente } = await admin.from("farmacie").select("id").eq("codice_farmacia", dati.codice_farmacia!).maybeSingle();
-    if (esistente) errori.codice_farmacia = "Questo codice farmacia è già iscritto. Accedi o contatta l'amministrazione.";
-  }
 
   if (Object.keys(errori).length) {
     return { errori, valori, messaggio: "Controlla i campi evidenziati." };
@@ -58,12 +54,7 @@ export async function registraFarmacia(_prima: StatoModulo, fd: FormData): Promi
   if (error || !farmaciaId) {
     console.error("[registrazione] salvataggio non riuscito:", error?.message);
     await admin.auth.admin.deleteUser(iscrizione.user.id);
-    const doppione = error?.code === "23505";
-    return {
-      valori,
-      errori: doppione ? { codice_farmacia: "Questo codice farmacia è già iscritto" } : {},
-      messaggio: doppione ? "Controlla i campi evidenziati." : messaggioErroreAuth(null),
-    };
+    return { valori, messaggio: messaggioErroreAuth(null) };
   }
 
   // 3. Notifiche (un errore di invio non annulla l'iscrizione).
