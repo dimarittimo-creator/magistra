@@ -3,14 +3,19 @@ import type { Email } from "./invia";
 // Modelli delle email del portale. Stile coerente con docs/GRAFICA.md
 // (blu Magistra, filetto rame, pay off nel piè di pagina).
 
-const sito = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+export const sito = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-function esc(testo: string): string {
+export function esc(testo: string): string {
   return testo.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-function impagina(paragrafi: string[], pulsante?: { testo: string; url: string }): string {
-  const corpo = paragrafi.map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 14px">${p}</p>`).join("");
+/** Blocco di testo (diventa un paragrafo) oppure HTML già pronto (es. una tabella). */
+export type Blocco = string | { html: string; testo: string };
+
+function impagina(paragrafi: Blocco[], pulsante?: { testo: string; url: string }): string {
+  const corpo = paragrafi
+    .map((p) => (typeof p === "string" ? `<p style="font-size:16px;line-height:1.5;margin:0 0 14px">${p}</p>` : p.html))
+    .join("");
   const bottone = pulsante
     ? `<p style="margin:26px 0"><a href="${pulsante.url}" style="background:#022976;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">${esc(pulsante.testo)}</a></p>`
     : "";
@@ -24,14 +29,14 @@ ${corpo}${bottone}
 </div></body></html>`;
 }
 
-function soloTesto(paragrafi: string[], pulsante?: { testo: string; url: string }): string {
-  const righe = paragrafi.map((p) => p.replace(/<[^>]+>/g, ""));
+function soloTesto(paragrafi: Blocco[], pulsante?: { testo: string; url: string }): string {
+  const righe = paragrafi.map((p) => (typeof p === "string" ? p.replace(/<br \/>/g, "\n").replace(/<[^>]+>/g, "") : p.testo));
   if (pulsante) righe.push(`${pulsante.testo}: ${pulsante.url}`);
   righe.push("", "Magistra – Semplicemente Magistrale", "Sagè Pharma S.r.l. · Bioeleva S.r.l.");
   return righe.join("\n\n");
 }
 
-function componi(a: string | string[], oggetto: string, paragrafi: string[], pulsante?: { testo: string; url: string }): Email {
+export function componi(a: string | string[], oggetto: string, paragrafi: Blocco[], pulsante?: { testo: string; url: string }): Email {
   return { a, oggetto, html: impagina(paragrafi, pulsante), testo: soloTesto(paragrafi, pulsante) };
 }
 

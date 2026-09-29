@@ -53,6 +53,18 @@ export async function richiediRuolo(...ruoli: Ruolo[]): Promise<Utente & { profi
   return utente as Utente & { profilo: Profilo };
 }
 
+/**
+ * Farmacia con iscrizione approvata: serve per catalogo, carrello e prenotazioni.
+ * Le farmacie in attesa o bloccate tornano alla pagina iniziale, che spiega il motivo.
+ */
+export async function richiediFarmaciaAttiva(): Promise<Utente & { profilo: Profilo; farmaciaId: string }> {
+  const utente = await richiediRuolo("farmacia");
+  const db = await creaClientServer();
+  const { data } = await db.rpc("farmacia_attiva");
+  if (!data || !utente.profilo.farmacia_id) redirect("/farmacia");
+  return { ...utente, farmaciaId: utente.profilo.farmacia_id };
+}
+
 export const richiediAdmin = () => richiediRuolo("admin");
 export const richiediStaff = () => richiediRuolo("admin", "operatore");
 export const richiediFarmacia = () => richiediRuolo("farmacia");

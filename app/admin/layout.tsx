@@ -6,6 +6,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
   const admin = utente.profilo.ruolo === "admin";
   const voci = [
     { href: "/admin", testo: "Cruscotto", esatta: true },
+    { href: "/admin/ordini", testo: "Ordini" },
     { href: "/admin/farmacie", testo: "Farmacie" },
     ...(admin
       ? [

@@ -52,9 +52,12 @@ export default async function AreaFarmacia() {
           <p className="pill pill-ok">Iscrizione attiva</p>
           <h2 id="titolo-attiva" className="text-2xl">Benvenuto in Magistra</h2>
           <p className="text-muted">
-            Il catalogo con lotti, scadenze e prezzi riservati e le prenotazioni d&apos;ordine saranno disponibili qui a
-            breve.
+            Consulta il catalogo con lotti, scadenze e prezzi riservati e invia le tue prenotazioni d&apos;ordine.
           </p>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link href="/farmacia/catalogo" className="btn btn-primary">Apri il catalogo</Link>
+            <Link href="/farmacia/ordini" className="btn btn-secondary">I miei ordini</Link>
+          </div>
         </section>
       )}
 
