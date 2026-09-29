@@ -2,7 +2,7 @@
 
 _Aggiornato da Claude Code a fine di ogni sessione._
 
-- [ ] Fase 0 – Preparazione — **in corso** (29/09/2026): file del progetto pronti; in attesa dell'installazione di Node.js, Git e Docker Desktop per avviare, testare e fare il primo commit.
+- [ ] Fase 0 – Preparazione — **in corso** (29/09/2026): Node.js e Git installati, sito avviato in locale e controllato (desktop, smartphone, modalità scura), test verdi, primo commit fatto. Manca solo il database locale: servono WSL e Docker Desktop.
 - [ ] Fase 1 – Registrazione, accesso, società e sedi
 - [ ] Fase 2 – Catalogo e prenotazione farmacie
 - [ ] Fase 3 – Amministrazione e spedizioni al deposito
