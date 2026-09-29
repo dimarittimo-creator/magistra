@@ -3,8 +3,8 @@
 _Aggiornato da Claude Code a fine di ogni sessione._
 
 - [x] Fase 0 – Preparazione — **completata** (29/09/2026): Node.js, Git, WSL e Docker Desktop installati; database locale avviato con le due società (con IBAN), le quattro sedi e l'operatore CIENNE collegato al deposito predefinito; test verdi.
-- [x] Fase 1 – Registrazione, accesso, società e sedi — **completata** (29/09/2026), in attesa dell'ok di Salvatore: test verdi (12 Vitest, 4 Playwright).
-- [ ] Fase 2 – Catalogo e prenotazione farmacie
+- [x] Fase 1 – Registrazione, accesso, società e sedi — **completata** e approvata (29/09/2026).
+- [x] Fase 2 – Catalogo e prenotazione farmacie — **completata** (29/09/2026), in attesa dell'ok di Salvatore: test verdi (90 Vitest, 10 Playwright).
 - [ ] Fase 3 – Amministrazione e spedizioni al deposito
 - [ ] Fase 4 – Documenti
 - [ ] Fase 5 – Area Privati (B2C)
@@ -44,6 +44,29 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 4. Test automatici: `npm test` e `npm run test:e2e` (il sito deve essere avviato o si avvia da solo).
 5. Amministratore vero per la messa online: `npm run crea-admin -- email "Nome Cognome"`.
 
+## Fase 2 – cosa c'è
+- **Import iniziale** della giacenza di esempio (Crystal `.xls`, letta così com'è) e del listino sul deposito predefinito: `npm run importa-dati` (47 prodotti, 64 lotti, 90.297 pezzi; 8 prodotti senza prezzo restano non visibili). Lettura in `lib/import/`, scrittura in `lib/import/applica.ts`, riusabili dall'interfaccia admin della Fase 3.
+- **Prezzi** in un solo modulo (`lib/pricing`): fasce di scadenza modificabili (8 mesi 38%, 6 mesi 40%, sotto 45%), "oggi + N mesi" come EDATE di Excel, sconto manuale sul lotto, predisposizione promozioni (vale il migliore), totali con IVA per aliquota. **I 64 lotti del file di verifica coincidono al centesimo** (test automatico).
+- **Disponibilità e stati** (`lib/availability` + funzione `disponibilita_lotti` nel database): difformità → "Mancante temporaneamente", lotto senza scadenza → "Mancante", scaduti nascosti, "In esaurimento" sotto 50 pezzi, merce prenotata sottratta subito.
+- **Catalogo** (`/farmacia/catalogo`) con ricerca, filtri linea/area (compaiono quando le linee saranno inserite) e "solo disponibili"; **scheda prodotto** con lotti, scadenze, disponibili, sconto colorato per fascia e i 4 prezzi (farmacia IVA esclusa in grassetto).
+- **Carrello** salvato sul server (si ritrova da tablet o computer): quantità modificabili, controllo di disponibile, minimo e multiplo; scelta **società che fattura e consegna** (predefinita della farmacia o del portale); **modalità di pagamento obbligatoria** (bonifico solo se la società ha un IBAN valido, con IBAN mostrato); data desiderata, note, consegna indicativa (5 giorni lavorativi, non garantita); riepilogo con imponibile, sconti, IVA e totale; condizioni di vendita con **"Ho letto e accetto" obbligatorio**.
+- **Invio in un'unica transazione** (`invia_ordine_farmacia`): lotti bloccati, controllo della merce, numerazione P-2026-00001, fotografia di farmacia, società, pagamento e condizioni. Se nel frattempo la merce è finita, l'ordine non parte e la farmacia vede quale riga correggere.
+- **Email**: riepilogo alla farmacia (con dati della società scelta, IBAN per il bonifico, condizioni accettate) e avviso all'amministrazione.
+- **I miei ordini** con stato, dettaglio, storico e **"Ripeti ordine"** (se il lotto è finito propone il lotto con il prezzo migliore).
+- **Scadenza delle prenotazioni** non confermate entro 3 giorni lavorativi (festività nazionali escluse): job `/api/cron/scadenze` ogni 15 minuti (`vercel.json`), la merce torna disponibile, email alla farmacia.
+- **Amministrazione → Ordini**: elenco e dettaglio in sola lettura (conferma, modifica, rifiuto e invio al deposito in Fase 3).
+- Database: migrazione `supabase/migrations/20260930090000_fase2_catalogo_ordini.sql`; fasce e modalità di pagamento iniziali in `supabase/seed.sql`.
+- Test: `tests/unit/pricing.test.ts`, `tests/unit/import.test.ts`, `tests/e2e/fase2.spec.ts` (Bioeleva nel riepilogo e nell'email, invio bloccato senza pagamento o condizioni, due farmacie sull'ultima merce, scadenza e ripeti ordine, farmacia in attesa senza catalogo).
+
+### Come provarlo
+1. Come per la Fase 1, poi `npm run importa-dati` (solo la prima volta o dopo un `npm run db:reset`).
+2. Accedi come **farmacia.attiva@magistra.test** (password in `credenziali-test.txt`) → Catalogo → un prodotto → Aggiungi → Carrello → Invia.
+3. Le email arrivano su http://127.0.0.1:54324; l'admin vede la prenotazione in Amministrazione → Ordini.
+4. Per provare la scadenza senza aspettare 3 giorni: http://localhost:3000/api/cron/scadenze esegue il controllo (in locale non serve la chiave).
+
+### Da sapere per la messa online
+- Il job ogni 15 minuti su Vercel richiede il piano Pro; con il piano gratuito si può eseguire una volta al giorno.
+
 ## Decisioni del 29/09/2026 (Fase 1)
 - **Codice farmacia**: lo assegna il portale all'iscrizione, numero progressivo da **0100** in avanti; la farmacia non lo inserisce e non si modifica (migrazione `20260929140000_codice_farmacia_progressivo.sql`).
 - **Avvisi di nuova iscrizione**: a tutti gli utenti admin.
@@ -52,7 +75,7 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - Informativa privacy e condizioni di vendita definitive: sostituiscono i testi provvisori creando una nuova versione (pagina admin in Fase 3).
 
 ## Punti da chiarire (emersi in Fase 0)
-- `verifica_prezzi_attesi.xlsx` calcola il prezzo farmacia IVA esclusa in un solo passaggio (pubblico × (1 − sconto) ÷ (1 + IVA)), mentre `REGOLE_COMMERCIALI.md` arrotonda prima il prezzo IVA inclusa. Su alcuni lotti può esserci 1 centesimo di differenza: da verificare in Fase 2.
+- ~~Possibile centesimo di differenza tra il file di verifica e le regole di arrotondamento~~ — **risolto in Fase 2**: con le regole di `REGOLE_COMMERCIALI.md` tutti i 64 lotti coincidono al centesimo.
 - Nello stesso file la data di riferimento è una formula "oggi": i valori salvati devono essere quelli del 28/09/2026.
 
 ## Modifiche alle specifiche
