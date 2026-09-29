@@ -43,7 +43,9 @@ export function leggiScadenza(valore: unknown): DataISO | null {
     return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
   }
   if (valore instanceof Date) {
-    return `${valore.getFullYear()}-${String(valore.getMonth() + 1).padStart(2, "0")}-${String(valore.getDate()).padStart(2, "0")}`;
+    // Le date lette dai file Excel sono a mezzanotte UTC
+    if (valore.getUTCFullYear() < 1901) return null; // solo orario
+    return `${valore.getUTCFullYear()}-${String(valore.getUTCMonth() + 1).padStart(2, "0")}-${String(valore.getUTCDate()).padStart(2, "0")}`;
   }
   const m = String(valore).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   return m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : null;

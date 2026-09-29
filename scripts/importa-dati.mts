@@ -1,10 +1,10 @@
 // Import iniziale di giacenza del deposito e listino sul deposito predefinito.
 // Uso: npm run importa-dati [-- giacenza.xls listino.xlsx gg-mm-aaaa]
-// Senza argomenti usa i file di esempio in dati/. L'import dall'area admin arriva in Fase 3.
+// Senza argomenti usa i file di esempio in dati/. Di norma l'import si fa da Amministrazione → Magazzino.
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { applicaGiacenza, applicaListino } from "../lib/import/applica";
+import { applicaImport, creaImport } from "../lib/import/applica";
 import { dataDaNomeFile, leggiGiacenzaDeposito } from "../lib/import/giacenza";
 import { leggiListino } from "../lib/import/listino";
 
@@ -23,7 +23,6 @@ if (!dataGiacenza) {
   console.error("Indica la data della giacenza (gg-mm-aaaa) come terzo argomento.");
   process.exit(1);
 }
-
 const { data: deposito } = await db.from("sedi").select("id, nome").eq("predefinito", true).single();
 if (!deposito) {
   console.error("Nessun deposito predefinito nelle sedi.");
@@ -37,17 +36,16 @@ console.log(
     `${giacenza.totali.difformita} difformità, ${giacenza.totali.senza_scadenza} lotti senza scadenza`,
 );
 for (const e of giacenza.errori) console.log(`  ! riga ${e.riga}: ${e.messaggio}`);
-const esitoGiacenza = await applicaGiacenza(db, giacenza, {
-  depositoId: deposito.id,
-  dataGiacenza,
-  fileNome: basename(fileGiacenza),
-});
-for (const a of esitoGiacenza.avvisi) console.log(`  · ${a}`);
+const contenutoG = { tipo: "deposito_crystal" as const, giacenza };
+const idG = await creaImport(db, { tipo: "deposito_crystal", fileNome: basename(fileGiacenza), depositoId: deposito.id, dataGiacenza, contenuto: contenutoG, riepilogo: giacenza.totali });
+for (const a of await applicaImport(db, { id: idG, tipo: "deposito_crystal", deposito_id: deposito.id, data_giacenza: dataGiacenza, contenuto: contenutoG })) console.log(`  · ${a}`);
 
 const listino = await leggiListino(readFileSync(fileListino));
 console.log(`Listino ${basename(fileListino)}: ${listino.voci.length} prezzi`);
 for (const e of listino.errori) console.log(`  ! riga ${e.riga}: ${e.messaggio}`);
-await applicaListino(db, listino, { fileNome: basename(fileListino) });
+const contenutoL = { tipo: "listino" as const, listino };
+const idL = await creaImport(db, { tipo: "listino", fileNome: basename(fileListino), contenuto: contenutoL, riepilogo: { voci: listino.voci.length } });
+await applicaImport(db, { id: idL, tipo: "listino", deposito_id: null, data_giacenza: null, contenuto: contenutoL });
 
 const { count } = await db.from("prodotti").select("codice", { count: "exact", head: true }).is("prezzo_pubblico_cent", null);
 console.log(`Fatto. Prodotti senza prezzo (non visibili alle farmacie): ${count}`);
