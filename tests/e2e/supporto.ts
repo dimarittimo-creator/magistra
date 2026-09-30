@@ -150,3 +150,10 @@ export async function compilaInvio(page: Page, opzioni: { societa?: "Sagè Pharm
   if (opzioni.pagamento) await page.getByLabel("Modalità di pagamento").selectOption({ label: opzioni.pagamento });
   if (opzioni.accetta) await page.getByLabel("Ho letto e accetto").check();
 }
+
+/** IBAN della società come lo mostra il portale ("IT00 X000 …"), letto dal database: gli IBAN veri non stanno nel codice. */
+export async function ibanSocieta(codice: "sage" | "bioeleva"): Promise<string> {
+  const { data } = await db.from("societa").select("iban").eq("codice", codice).single();
+  if (!data?.iban) throw new Error(`IBAN di ${codice} mancante: controlla supabase/seed_privato.sql`);
+  return data.iban.replace(/s/g, "").match(/.{1,4}/g)!.join(" ");
+}

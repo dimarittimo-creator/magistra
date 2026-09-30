@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { accedi, attendiEmail, compilaInvio, creaFarmaciaAttiva, creaProdottoDiTest, db } from "./supporto";
+import { accedi, attendiEmail, compilaInvio, creaFarmaciaAttiva, creaProdottoDiTest, db, ibanSocieta } from "./supporto";
 
 // Criteri di accettazione della Fase 2 (docs/FASI.md).
 
@@ -33,9 +33,10 @@ test("prenotazione con Bioeleva: riepilogo ed email riportano i dati Bioeleva e 
   await page.getByRole("button", { name: "Aggiungi" }).filter({ visible: true }).click();
   await expect(page.getByText("Nel carrello: 3 pezzi")).toBeVisible();
 
+  const ibanBio = await ibanSocieta("bioeleva");
   await page.goto("/farmacia/carrello");
   await compilaInvio(page, { societa: "Bioeleva", pagamento: "Bonifico bancario anticipato", accetta: true });
-  await expect(page.getByText(/IBAN IBAN-RIMOSSO intestato a BIOELEVA/)).toBeVisible();
+  await expect(page.getByText(new RegExp(`IBAN ${ibanBio} intestato a BIOELEVA`))).toBeVisible();
   await page.getByRole("button", { name: "Invia la prenotazione" }).click();
 
   await expect(page).toHaveURL(/\/farmacia\/ordini\/.+\?inviato=1/);
@@ -43,13 +44,13 @@ test("prenotazione con Bioeleva: riepilogo ed email riportano i dati Bioeleva e 
   const fattura = page.locator("section", { hasText: "Fattura e consegna" });
   await expect(fattura.getByText("BIOELEVA S.r.l.", { exact: true })).toBeVisible();
   await expect(fattura.getByText("P.IVA 04363330277")).toBeVisible();
-  await expect(page.getByText("IBAN IBAN-RIMOSSO")).toBeVisible();
+  await expect(page.getByText(`IBAN ${ibanBio}`)).toBeVisible();
   const numero = (await page.getByRole("heading", { level: 1 }).innerText()).match(/P-\d{4}-\d{5}/)![0];
 
   const email = await attendiEmail(farmaciaA.email, `Prenotazione ${numero} ricevuta`);
   expect(email).toContain("BIOELEVA S.r.l.");
   expect(email).toContain("04363330277");
-  expect(email).toContain("IBAN-RIMOSSO");
+  expect(email).toContain(ibanBio);
   expect(email).toContain("Condizioni di vendita accettate");
 
   // La merce prenotata non è più disponibile per gli altri

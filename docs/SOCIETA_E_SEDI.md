@@ -19,7 +19,7 @@ Dati iniziali (visure camerali del 09/04/2026, confermati da Salvatore il 28/09/
 | REA | NA - 853582 | NA - 1108752 |
 | Capitale sociale (testo libero) | € 100.000,00 (dicitura "i.v." da confermare) | € 13.612,00 i.v. |
 | Sito | www.sagepharma.it | www.bioeleva.com |
-| IBAN per bonifico | IBAN-RIMOSSO | IBAN-RIMOSSO |
+| IBAN per bonifico | forniti, in `supabase/seed_privato.sql` (fuori da Git) | forniti, in `supabase/seed_privato.sql` (fuori da Git) |
 | Logo | `design/logo_sage_pharma.jpg` | `design/logo_bioeleva.png` (fornito il 30/09/2026) |
 | Attiva per farmacie / per privati | sì / sì | sì / sì |
 | Predefinita | sì | no |

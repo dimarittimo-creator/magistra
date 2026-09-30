@@ -160,7 +160,7 @@ test("l'admin modifica un dato di una società e lo ritrova nello storico; un IB
   // IBAN con cifra di controllo sbagliata
   const campoIban = page.getByLabel("IBAN per bonifico");
   const ibanOriginale = await campoIban.inputValue();
-  await campoIban.fill("IBAN-RIMOSSO");
+  await campoIban.fill("IT61X0542811101000000123456");
   await page.getByRole("button", { name: "Salva le modifiche" }).click();
   await expect(page.getByText("IBAN non valido")).toBeVisible();
   const { data: bioeleva } = await db.from("societa").select("iban").eq("codice", "bioeleva").single();

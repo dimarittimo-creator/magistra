@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { extractText, getDocumentProxy } from "unpdf";
-import { accedi, compilaInvio, creaAdminTemporaneo, creaFarmaciaAttiva, creaProdottoDiTest, db } from "./supporto";
+import { accedi, compilaInvio, creaAdminTemporaneo, creaFarmaciaAttiva, creaProdottoDiTest, db, ibanSocieta } from "./supporto";
 
 // Fase 4 – documenti: i totali di PDF ed Excel coincidono al centesimo con il riepilogo;
 // cambiando società cambiano intestazione e dati fiscali; DDT simulato con la dicitura obbligatoria.
@@ -67,7 +67,7 @@ test("PDF ed Excel dell'ordine: totali uguali al riepilogo, dati fiscali della s
   expect(pdf).toContain(farmacia.ragioneSociale);
   expect(pdf).toContain(normalizza(euro(o!.imponibile_cent)));
   expect(pdf).toContain(normalizza(euro(o!.totale_cent)));
-  expect(pdf).toContain("IBAN IBAN-RIMOSSO");
+  expect(pdf).toContain(`IBAN ${await ibanSocieta("sage")}`);
   expect(pdf).toContain("Ordine effettuato tramite Magistra");
 
   // Excel: righe e totali al centesimo
@@ -104,7 +104,7 @@ test("PDF ed Excel dell'ordine: totali uguali al riepilogo, dati fiscali della s
   expect(pdfBio).toContain("BIOELEVA S.r.l.");
   expect(pdfBio).toContain("P.IVA 04363330277");
   expect(pdfBio).not.toContain("01698370994");
-  expect(pdfBio).toContain("IBAN IBAN-RIMOSSO");
+  expect(pdfBio).toContain(`IBAN ${await ibanSocieta("bioeleva")}`);
   expect(pdfBio).toContain(normalizza(euro(o!.totale_cent)));
 });
 
