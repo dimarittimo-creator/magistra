@@ -31,8 +31,9 @@ const LINEA = "#dfe4e6";
 function logoSocieta(percorso: string | null): Buffer | null {
   if (!percorso) return null;
   const base = join(process.cwd(), "public", percorso.replace(/^\//, ""));
-  const leggero = base.replace(/(\.\w+)$/, "-documenti$1");
-  const file = existsSync(leggero) ? leggero : existsSync(base) ? base : null;
+  // Versione leggera per i documenti (es. logo-bioeleva-documenti.jpg), se esiste
+  const leggeri = [".jpg", ".png"].map((est) => base.replace(/\.\w+$/, `-documenti${est}`));
+  const file = leggeri.find((f) => existsSync(f)) ?? (existsSync(base) ? base : null);
   return file ? readFileSync(file) : null;
 }
 
@@ -44,7 +45,7 @@ function logoMagistra(): Buffer | null {
 const s = StyleSheet.create({
   pagina: { paddingTop: 28, paddingBottom: 56, paddingHorizontal: 32, fontSize: 8.5, fontFamily: "Helvetica", color: "#1d2427" },
   intestazione: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", borderBottomWidth: 1.5, borderColor: BLU, paddingBottom: 10, marginBottom: 12 },
-  logo: { width: 170, height: 34, objectFit: "contain" },
+  logo: { width: 170, height: 46, objectFit: "contain", objectPosition: "left" },
   segnaposto: { borderWidth: 1, borderColor: BLU, paddingVertical: 6, paddingHorizontal: 10, color: BLU, fontFamily: "Helvetica-Bold", fontSize: 13 },
   datiSocieta: { width: 250, textAlign: "right", fontSize: 7.5, color: GRIGIO, lineHeight: 1.35 },
   titolo: { fontSize: 15, color: BLU, fontFamily: "Helvetica-Bold" },

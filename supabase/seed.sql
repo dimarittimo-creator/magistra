@@ -28,8 +28,8 @@ values
   ('bioeleva', 'BIOELEVA S.r.l.', 'Bioeleva',
    'Viale Antonio Gramsci, 21', '80122', 'Napoli', 'NA',
    '04363330277', '04363330277', 'M5UXCR1', 'bioeleva@legalmail.it', 'NA - 1108752',
-   '€ 13.612,00 i.v.', 'www.bioeleva.com', null,
-   true, true, false, 'Logo da fornire');
+   '€ 13.612,00 i.v.', 'www.bioeleva.com', '/brand/logo-bioeleva.png',
+   true, true, false, null);
 
 -- Sedi iniziali
 insert into public.sedi (societa_id, tipo, nome, indirizzo, cap, citta, provincia, telefono, email, predefinito, operatore_id, note)

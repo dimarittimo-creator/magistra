@@ -8,7 +8,7 @@
 - Il pay off compare anche: nella home (sotto il logo, grande), nel titolo della pagina del browser ("Magistra – Semplicemente Magistrale"), nel piè di pagina del sito e delle email.
 - Nei documenti d'ordine (PDF, Excel, DDT simulato) l'intestazione resta quella della **società che fattura** (logo Sagè Pharma o Bioeleva); il logo Magistra va solo in piccolo nel piè di pagina ("Ordine effettuato tramite Magistra").
 - **Stessi colori aziendali per entrambe le società** (palette qui sotto, ricavata dal logo Sagè Pharma).
-- Logo società: `design/logo_sage_pharma.jpg` (fondo bianco) nei documenti e nelle email degli ordini fatturati da Sagè Pharma; per Bioeleva segnaposto finché non viene fornito il logo. Mostra i loghi sempre su una fascia bianca, anche in modalità scura.
+- Logo società: `design/logo_sage_pharma.jpg` (fondo bianco) nei documenti e nelle email degli ordini fatturati da Sagè Pharma; per Bioeleva `design/logo_bioeleva.png` (fornito il 30/09/2026; nel portale `public/brand/logo-bioeleva.png` e la versione leggera per i documenti). Mostra i loghi sempre su una fascia bianca, anche in modalità scura.
 - Spazi dedicati a Bioeleva predisposti (vedi `SOCIETA_E_SEDI.md` §3), stessa palette.
 - Riferimento visivo approvato: `design/riferimento_pannello_sconti.html` (aprilo nel browser). Nel riferimento i pulsanti sono rossi: vanno resi in blu `brand` come da tabella colori. I testi "Sagè Pharma" nel riferimento vanno letti come "Magistra"; vale la resa grafica.
 - Mostra il logo Magistra sempre su fondo bianco o chiaro; in modalità scura usa una fascia bianca per l'intestazione oppure una versione del logo in bianco.

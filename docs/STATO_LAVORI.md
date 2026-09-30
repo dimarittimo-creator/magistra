@@ -50,7 +50,7 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - **Dopo la spedizione** il DDT reale caricato dall'admin sostituisce il simulato tra i documenti.
 - Gli importi sono quelli salvati nell'ordine: **PDF ed Excel coincidono al centesimo** con il riepilogo (test automatico, anche con due aliquote IVA). **Cambiando società** (modifica dall'admin) cambiano intestazione, dati fiscali e IBAN.
 - La farmacia scarica solo i documenti dei propri ordini.
-- Test: `tests/e2e/fase4.spec.ts`. Per il logo nei documenti si usa `public/brand/logo-sage-pharma-documenti.jpg` (versione leggera); per Bioeleva basta caricare il file e indicarne il percorso nella scheda della società.
+- Test: `tests/e2e/fase4.spec.ts`. Loghi nei documenti: versioni leggere `public/brand/logo-sage-pharma-documenti.jpg` e `logo-bioeleva-documenti.jpg` (logo Bioeleva aggiunto il 30/09/2026). Ordini di esempio della farmacia di prova: P-2026-00052 (Sagè Pharma) e P-2026-00064 (Bioeleva).
 
 ### Come provarlo
 1. Accedi come **farmacia.attiva@magistra.test** → **I miei ordini** → apri l'ordine di esempio → **Riepilogo PDF**, **Riepilogo Excel**, **DDT simulato**.
@@ -125,7 +125,6 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - Eventuali altri indirizzi CIENNE in copia per le richieste di evasione.
 - Eventuali altre sedi operative o depositi.
 - Capitale sociale Sagè Pharma: confermare se va indicato "interamente versato".
-- Logo Bioeleva.
 - Testi di informativa privacy, condizioni di vendita farmacie (versione definitiva) e condizioni di vendita privati validate da un legale.
 - Spese di spedizione per i privati.
 - Primi sconti privati del mese.
