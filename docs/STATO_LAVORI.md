@@ -157,6 +157,7 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 ## Decisioni del 30/09/2026 (Fase 7)
 - **Dominio**: magistraonline.it (registrato su Aruba). Indirizzo del portale **https://www.magistraonline.it**; magistraonline.it senza "www" rimanda lì. Email del portale inviate da **noreply@magistraonline.it**, dominio autenticato con SPF e DKIM. **Servizio email da decidere**: Delera se offre SMTP transazionale (dominio proprio, SPF/DKIM, allegati PDF), altrimenti Brevo per le email automatiche e Delera per il marketing.
 - **Codice su GitHub**: repository privato `dimarittimo-creator/magistra` (dal 30/09/2026). IBAN reali tolti anche dalla cronologia (sostituiti da "IBAN-RIMOSSO"): i test li leggono dal database.
+- **Database di produzione**: Supabase Pro, progetto `magistra` a **Francoforte** (eu-central-1, ref `lepykbcqppnqrintlcmu`), creato il 30/09/2026. Caricate le 8 migrazioni e i dati iniziali (società con IBAN, sedi, CIENNE, fasce, pagamenti, testi legali provvisori). Nessun prodotto né utente: magazzino da importare dal sito, primo admin con `npm run crea-admin`.
 - **Costi approvati** da Salvatore: Supabase Pro (circa 25 $/mese) e Vercel Pro (circa 20 $/mese).
 - **Dati iniziali di produzione**: `supabase/seed.sql` + `supabase/seed_privato.sql` (IBAN, fuori da Git). Gli esempi di prova stanno in `supabase/seed_esempi_locale.sql` e non vanno online.
 
