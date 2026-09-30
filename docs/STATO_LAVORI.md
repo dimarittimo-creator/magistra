@@ -6,8 +6,8 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 1 – Registrazione, accesso, società e sedi — **completata** e approvata (29/09/2026).
 - [x] Fase 2 – Catalogo e prenotazione farmacie — **completata** e approvata (29/09/2026).
 - [x] Fase 3 – Amministrazione e spedizioni al deposito — **completata** e approvata (29/09/2026).
-- [x] Fase 4 – Documenti — **completata** (30/09/2026), in attesa dell'ok di Salvatore: test verdi (94 Vitest, 23 Playwright).
-- [ ] Fase 5 – Area Privati (B2C)
+- [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
+- [x] Fase 5 – Area Privati (B2C) — **completata** (30/09/2026), in attesa dell'ok di Salvatore: test verdi (103 Vitest, 26 Playwright). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
 - [ ] Fase 6 – Chatbot
 - [ ] Fase 7 – Messa online
 
@@ -43,6 +43,27 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 3. Email ricevute dal portale (casella di prova): http://127.0.0.1:54324
 4. Test automatici: `npm test` e `npm run test:e2e` (il sito deve essere avviato o si avvia da solo).
 5. Amministratore vero per la messa online: `npm run crea-admin -- email "Nome Cognome"`.
+
+## Fase 5 – cosa c'è
+- **Negozio** (`/negozio`), consultabile anche senza account: prezzo pieno, **sconto del mese**, prezzo finale IVA inclusa, "Disponibile / Non disponibile". Niente lotti, giacenze, prezzi o sconti farmacia (i dati arrivano dal server già filtrati, `lib/negozio.ts`). Prodotti visibili ai privati per default se hanno un prezzo (campo "Visibile nell'area Privati" nella scheda prodotto).
+- **Registrazione privato** (`/registrazione/privato`): nome, cognome, codice fiscale, email, telefono, indirizzo di spedizione e fatturazione, consensi (privacy, condizioni privati, marketing facoltativo). Attivo dopo la conferma dell'email, senza approvazione. Si può creare l'account al primo ordine (niente ordini anonimi).
+- **Carrello e ordine**: il cliente sceglie prodotto e quantità; il **lotto lo assegna il sistema** (scadenza più vicina tra i lotti con almeno 6 mesi di vita residua, impostabile; i lotti più corti restano alle farmacie). Società che vende (se attive entrambe), **pagamento obbligatorio** (bonifico anticipato, contrassegno; carta online predisposta ma non attiva), note, **spese di spedizione** calcolate (gratuite oltre soglia) su riga separata, condizioni privati con accettazione obbligatoria. Il totale è la somma dei prezzi mostrati; IVA per scorporo. Stesso impegno transazionale delle farmacie.
+- **Ordini privati** nello stesso flusso ordini/deposito; con **bonifico** l'ordine va al deposito solo dopo "**Segna pagamento ricevuto**" (anche nell'invio cumulativo). Email dedicate (ricevuto, cambi di stato) e documenti PDF/Excel con prezzi IVA inclusa e spese; niente DDT simulato per i privati.
+- **Amministrazione**: **Sconti privati** del mese (globale, linea, prodotto; vale il migliore; anteprima dei prezzi finali; "Copia sul mese successivo"; scadono da soli; promemoria email 5 giorni prima della fine del mese se il mese dopo è scoperto), **Clienti privati** (blocca / sblocca), **Area Privati** (spese di spedizione, soglia gratuita, IVA sulle spese, vita residua minima dei lotti, **attivazione online bloccata** finché mancano spese e condizioni privati definitive — blocco anche nel database).
+- Pagina pubblica **Chi siamo – dati del venditore** con i dati delle due società, richiamata dal carrello e dal piè di pagina.
+- Database: `20260930160000_fase5_area_privati.sql`; modalità di pagamento privati in `supabase/seed.sql`.
+- Test: `tests/unit/privati.test.ts`, `tests/e2e/fase5.spec.ts`.
+
+### Come provarlo (in locale il negozio è sempre aperto)
+1. Come admin: **Area Privati** → indica le spese di spedizione (valore di prova, es. 6,90 €) → Salva. Prova **Attiva online**: il portale spiega perché non si può.
+2. **Sconti privati** → nuovo sconto (es. 15% su tutto il negozio per questo mese) → guarda l'anteprima → Salva.
+3. Apri http://localhost:3000/negozio (anche da smartphone), accedi come **privato@magistra.test** (password in `credenziali-test.txt`) o crea un nuovo account, aggiungi prodotti, completa l'ordine.
+4. Come admin, in **Ordini** conferma l'ordine; con bonifico usa "Segna pagamento ricevuto" prima di inviarlo al deposito.
+
+### Da fornire per aprire online
+- **Spese di spedizione** per i privati (importo, eventuale soglia di gratuità, eventuale costo del contrassegno).
+- **Condizioni di vendita privati** validate da un legale (recesso, garanzia, ecc.): si pubblicano da **Condizioni e privacy** togliendo "provvisorio".
+- Eventuale gestore dei **pagamenti con carta** (da decidere).
 
 ## Fase 4 – cosa c'è
 - **Riepilogo d'ordine in PDF ed Excel** (`lib/documents/ordine.tsx`), scaricabile dalla farmacia e dall'amministrazione (pulsanti "Documenti" nel dettaglio ordine): intestazione della **società che fattura** con logo (Sagè Pharma) o Bioeleva; se una società non ha logo compare il nome, dati fiscali completi di società e cliente, righe con lotti, scadenze, prezzo al pubblico, sconto, prezzo netto e IVA, totali per aliquota, pagamento (con IBAN per il bonifico), consegna indicativa, condizioni di vendita accettate (versione dell'ordine); logo Magistra piccolo nel piè di pagina "Ordine effettuato tramite Magistra".

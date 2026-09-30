@@ -44,7 +44,7 @@ export function valoriModulo(fd: FormData): Record<string, string> {
   return valori;
 }
 
-function leggiIndirizzo(fd: FormData, prefisso: string, errori: Record<string, string>): DatiIndirizzo {
+export function leggiIndirizzo(fd: FormData, prefisso: string, errori: Record<string, string>): DatiIndirizzo {
   const ind: DatiIndirizzo = {
     presso: leggi(fd, `${prefisso}_presso`),
     indirizzo: leggi(fd, `${prefisso}_indirizzo`),

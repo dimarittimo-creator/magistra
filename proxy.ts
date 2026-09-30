@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // Rinnova la sessione a ogni richiesta e rimanda all'accesso chi apre un'area riservata
 // senza essere collegato. È solo un primo filtro: i permessi veri li controllano
 // le pagine, le azioni e la Row Level Security del database.
-const AREE_RISERVATE = ["/farmacia", "/admin", "/area", "/nuova-password"];
+const AREE_RISERVATE = ["/farmacia", "/admin", "/area", "/nuova-password", "/negozio/carrello", "/negozio/ordini", "/negozio/profilo"];
 
 export async function proxy(request: NextRequest) {
   let risposta = NextResponse.next({ request });

@@ -119,8 +119,14 @@ function Cliente({ o, titolo }: { o: Ordine; titolo: string }) {
     <View style={s.riquadro}>
       <Text style={s.etichetta}>{titolo}</Text>
       <Text style={s.grassetto}>{c.ragione_sociale}</Text>
-      <Text>P.IVA {c.partita_iva} · C.F. {c.codice_fiscale}</Text>
-      <Text>Codice farmacia {c.codice_farmacia}</Text>
+      {o.canale === "privati" ? (
+        <Text>C.F. {c.codice_fiscale}</Text>
+      ) : (
+        <>
+          <Text>P.IVA {c.partita_iva} · C.F. {c.codice_fiscale}</Text>
+          <Text>Codice farmacia {c.codice_farmacia}</Text>
+        </>
+      )}
       {(c.sdi || c.pec) && <Text>{[c.sdi && `SDI ${c.sdi}`, c.pec && `PEC ${c.pec}`].filter(Boolean).join(" · ")}</Text>}
       <Text>Fatturazione: {formattaIndirizzoSnapshot(c.fatturazione)}</Text>
       <Text>Tel. {c.telefono} · {c.email}</Text>
@@ -129,6 +135,7 @@ function Cliente({ o, titolo }: { o: Ordine; titolo: string }) {
 }
 
 function Righe({ o }: { o: Ordine }) {
+  const privato = o.canale === "privati";
   return (
     <View>
       <View style={[s.riga, s.testata]} fixed>
@@ -139,9 +146,9 @@ function Righe({ o }: { o: Ordine }) {
         <Text style={col.omaggio}>Omaggio</Text>
         <Text style={col.pubblico}>Pubblico IVA incl.</Text>
         <Text style={col.sconto}>Sconto</Text>
-        <Text style={col.prezzo}>Prezzo IVA escl.</Text>
+        <Text style={col.prezzo}>{privato ? "Prezzo IVA incl." : "Prezzo IVA escl."}</Text>
         <Text style={col.iva}>IVA</Text>
-        <Text style={col.imponibile}>Imponibile</Text>
+        <Text style={col.imponibile}>{privato ? "Totale IVA incl." : "Imponibile"}</Text>
       </View>
       {o.righe.map((r) => (
         <View key={r.id} style={s.riga} wrap={false}>
@@ -155,9 +162,9 @@ function Righe({ o }: { o: Ordine }) {
           <Text style={col.omaggio}>{r.quantita_omaggio || ""}</Text>
           <Text style={col.pubblico}>{formattaEuro(r.prezzo_pubblico_cent)}</Text>
           <Text style={col.sconto}>{`${r.sconto_applicato.toLocaleString("it-IT")}%`}</Text>
-          <Text style={[col.prezzo, s.grassetto]}>{formattaEuro(r.prezzo_farmacia_netto_cent)}</Text>
+          <Text style={[col.prezzo, s.grassetto]}>{formattaEuro(privato ? r.prezzo_farmacia_ivato_cent : r.prezzo_farmacia_netto_cent)}</Text>
           <Text style={col.iva}>{`${r.iva.toLocaleString("it-IT")}%`}</Text>
-          <Text style={col.imponibile}>{formattaEuro(r.imponibile_cent)}</Text>
+          <Text style={col.imponibile}>{formattaEuro(privato ? r.prezzo_farmacia_ivato_cent * r.quantita : r.imponibile_cent)}</Text>
         </View>
       ))}
     </View>
@@ -165,6 +172,30 @@ function Righe({ o }: { o: Ordine }) {
 }
 
 function Totali({ o }: { o: Ordine }) {
+  if (o.canale === "privati") {
+    return (
+      <View style={s.totali} wrap={false}>
+        <View style={s.rigaTotale}>
+          <Text>Prodotti (IVA inclusa)</Text>
+          <Text>{formattaEuro(o.totale_cent - o.spese_spedizione_cent)}</Text>
+        </View>
+        <View style={s.rigaTotale}>
+          <Text>Spese di spedizione (IVA inclusa)</Text>
+          <Text>{o.spese_spedizione_cent ? formattaEuro(o.spese_spedizione_cent) : "gratuite"}</Text>
+        </View>
+        <View style={[s.rigaTotale, s.totale]}>
+          <Text>Totale</Text>
+          <Text>{formattaEuro(o.totale_cent)}</Text>
+        </View>
+        {o.iva_dettaglio.map((d) => (
+          <View key={d.aliquota} style={[s.rigaTotale, { color: GRIGIO }]}>
+            <Text>{`di cui IVA ${d.aliquota.toLocaleString("it-IT")}% su ${formattaEuro(d.imponibileCent)}`}</Text>
+            <Text>{formattaEuro(d.ivaCent)}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
   return (
     <View style={s.totali} wrap={false}>
       {o.sconti_cent > 0 && (
@@ -183,12 +214,6 @@ function Totali({ o }: { o: Ordine }) {
           <Text>{formattaEuro(d.ivaCent)}</Text>
         </View>
       ))}
-      {o.spese_spedizione_cent > 0 && (
-        <View style={s.rigaTotale}>
-          <Text>Spese di spedizione</Text>
-          <Text>{formattaEuro(o.spese_spedizione_cent)}</Text>
-        </View>
-      )}
       <View style={[s.rigaTotale, s.totale]}>
         <Text>Totale</Text>
         <Text>{formattaEuro(o.totale_cent)}</Text>
@@ -392,7 +417,7 @@ export async function excelOrdine(o: Ordine, condizioni: Condizioni | null): Pro
   if (o.sconti_cent > 0) totale("Sconti applicati", o.sconti_cent);
   totale("Imponibile", o.imponibile_cent, true);
   for (const d of o.iva_dettaglio) totale(`IVA ${d.aliquota.toLocaleString("it-IT")}%`, d.ivaCent);
-  if (o.spese_spedizione_cent > 0) totale("Spese di spedizione", o.spese_spedizione_cent);
+  if (o.spese_spedizione_cent > 0) totale("di cui spese di spedizione (IVA incl.)", o.spese_spedizione_cent);
   totale("Totale", o.totale_cent, true);
 
   if (condizioni) {

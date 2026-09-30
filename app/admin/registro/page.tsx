@@ -41,6 +41,15 @@ const AZIONI: Record<string, string> = {
   modifica_promozione: "Promozione modificata",
   duplica_promozione: "Promozione duplicata",
   modifica_listino_gruppo: "Listino di gruppo modificato",
+  pagamento_ricevuto: "Pagamento ricevuto",
+  modifica_spese_privati: "Spese di spedizione privati modificate",
+  attiva_area_privati: "Area Privati attivata online",
+  disattiva_area_privati: "Area Privati disattivata",
+  crea_sconto_privati: "Sconto privati creato",
+  copia_sconti_privati: "Sconti privati copiati sul mese successivo",
+  termina_sconto_privati: "Sconto privati terminato",
+  blocca_privato: "Cliente privato bloccato",
+  sblocca_privato: "Cliente privato sbloccato",
 };
 
 const ENTITA: Record<string, { tabella: string; campo: string; chiave?: string; link: (id: string) => string }> = {
@@ -53,6 +62,7 @@ const ENTITA: Record<string, { tabella: string; campo: string; chiave?: string; 
   societa: { tabella: "societa", campo: "nome_breve", link: (id) => `/admin/societa/${id}` },
   sedi: { tabella: "sedi", campo: "nome", link: (id) => `/admin/sedi/${id}` },
   gruppi: { tabella: "gruppi", campo: "nome", link: () => "/admin/gruppi" },
+  privati: { tabella: "privati", campo: "email", link: () => "/admin/privati" },
 };
 
 export default async function Registro() {

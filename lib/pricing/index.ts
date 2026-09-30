@@ -121,6 +121,57 @@ export function calcolaTotali(righe: RigaDaTotalizzare[]): Totali {
   return { imponibileCent, scontiCent, ivaCent, ivaDettaglio, totaleCent: imponibileCent + ivaCent };
 }
 
+// ---------------------------------------------------------------------------
+// Privati (docs/AREA_PRIVATI.md §3): prezzo al pubblico con lo sconto del mese.
+//   privato_ivato = round2(pubblico_ivato × (1 − sconto_mese))
+//   privato_netto = round2(privato_ivato / (1 + iva))
+// ---------------------------------------------------------------------------
+
+export type PrezzoPrivato = { pienoCent: number; scontoPercentuale: number; ivatoCent: number; nettoCent: number };
+
+export function prezzoPrivato(pubblicoIvatoCent: number, ivaPercentuale: number, scontoMese: number | null): PrezzoPrivato {
+  const sconto = scontoMese ?? 0;
+  const ivatoCent = applicaSconto(pubblicoIvatoCent, sconto);
+  return { pienoCent: pubblicoIvatoCent, scontoPercentuale: sconto, ivatoCent, nettoCent: scorporaIva(ivatoCent, ivaPercentuale) };
+}
+
+/**
+ * Totali di un ordine privato: il totale è la somma dei prezzi IVA inclusa mostrati al cliente
+ * (più le spese di spedizione, IVA inclusa); imponibile e IVA si ricavano per scorporo, aliquota per aliquota.
+ */
+export function calcolaTotaliPrivati(
+  righe: { quantita: number; ivaPercentuale: number; prezzo: PrezzoPrivato }[],
+  spese: { ivatoCent: number; ivaPercentuale: number } | null,
+): Totali & { prodottiCent: number; speseCent: number } {
+  const lordo = new Map<number, number>();
+  let prodottiCent = 0;
+  let scontiIvati = 0;
+  for (const r of righe) {
+    const riga = r.prezzo.ivatoCent * r.quantita;
+    prodottiCent += riga;
+    scontiIvati += (r.prezzo.pienoCent - r.prezzo.ivatoCent) * r.quantita;
+    lordo.set(r.ivaPercentuale, (lordo.get(r.ivaPercentuale) ?? 0) + riga);
+  }
+  const speseCent = spese?.ivatoCent ?? 0;
+  if (spese && speseCent > 0) lordo.set(spese.ivaPercentuale, (lordo.get(spese.ivaPercentuale) ?? 0) + speseCent);
+  const ivaDettaglio = [...lordo.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([aliquota, totale]) => {
+      const imponibileCent = scorporaIva(totale, aliquota);
+      return { aliquota, imponibileCent, ivaCent: totale - imponibileCent };
+    });
+  const imponibileCent = ivaDettaglio.reduce((s, d) => s + d.imponibileCent, 0);
+  const ivaCent = ivaDettaglio.reduce((s, d) => s + d.ivaCent, 0);
+  return { imponibileCent, ivaCent, ivaDettaglio, scontiCent: scontiIvati, totaleCent: prodottiCent + speseCent, prodottiCent, speseCent };
+}
+
+/** Spese di spedizione: gratuite oltre la soglia (sul totale prodotti IVA inclusa). */
+export function speseSpedizione(prodottiCent: number, regola: { importo_cent: number | null; soglia_gratuita_cent: number | null } | null): number | null {
+  if (!regola || regola.importo_cent == null) return null;
+  if (regola.soglia_gratuita_cent != null && prodottiCent >= regola.soglia_gratuita_cent) return 0;
+  return regola.importo_cent;
+}
+
 /** Aliquota del prodotto: eccezione sul prodotto oppure quella predefinita nelle impostazioni. */
 export function aliquotaProdotto(ivaOverride: number | null | undefined, ivaPredefinita: number): number {
   return ivaOverride ?? ivaPredefinita;

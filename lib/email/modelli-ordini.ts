@@ -98,6 +98,67 @@ export function emailNuovoOrdineAdmin(a: string[], o: Ordine): Email {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Ordini dei privati: prezzi IVA inclusa, spese di spedizione su riga separata.
+// ---------------------------------------------------------------------------
+
+function tabellaPrivato(o: Ordine): Blocco {
+  const righe = o.righe
+    .map(
+      (r) =>
+        `<tr><td style="${cella}">${esc(r.prodotto_nome)}</td><td style="${cellaDx}">${r.quantita}</td>` +
+        `<td style="${cellaDx}">${r.sconto_applicato > 0 ? `<s style="color:#5a6a70">${formattaEuro(r.prezzo_pubblico_cent)}</s> ` : ""}${formattaEuro(r.prezzo_farmacia_ivato_cent)}</td>` +
+        `<td style="${cellaDx}">${formattaEuro(r.prezzo_farmacia_ivato_cent * r.quantita)}</td></tr>`,
+    )
+    .join("");
+  const html =
+    `<table style="width:100%;border-collapse:collapse;margin:0 0 18px"><thead><tr><th style="${cella}">Prodotto</th><th style="${cellaDx}">Q.tà</th><th style="${cellaDx}">Prezzo</th><th style="${cellaDx}">Totale</th></tr></thead><tbody>${righe}` +
+    `<tr><td colspan="3" style="${cellaDx}">Spese di spedizione</td><td style="${cellaDx}">${o.spese_spedizione_cent ? formattaEuro(o.spese_spedizione_cent) : "gratuite"}</td></tr>` +
+    `<tr><td colspan="3" style="${cellaDx}"><strong>Totale (IVA inclusa)</strong></td><td style="${cellaDx}"><strong>${formattaEuro(o.totale_cent)}</strong></td></tr></tbody></table>`;
+  const testo = [
+    ...o.righe.map((r) => `- ${r.prodotto_nome}: ${r.quantita} × ${formattaEuro(r.prezzo_farmacia_ivato_cent)}`),
+    `Spese di spedizione ${formattaEuro(o.spese_spedizione_cent)} · Totale ${formattaEuro(o.totale_cent)} IVA inclusa`,
+  ].join("\n");
+  return { html, testo };
+}
+
+export function emailOrdinePrivatoRicevuto(o: Ordine, condizioni: { testo: string; versione: number }): Email {
+  const c = o.snapshot_cliente;
+  const p = o.snapshot_pagamento;
+  const blocchi: Blocco[] = [
+    `Ciao ${esc(c.nome ?? c.titolare)},`,
+    `grazie! Abbiamo ricevuto il tuo ordine <strong>${o.numero}</strong> del ${formattaDataOra(o.creato_il)}. Ti scriveremo appena lo avremo confermato e quando partirà.`,
+    tabellaPrivato(o),
+    `<strong>Spedizione a:</strong> ${esc(formattaIndirizzoSnapshot(c.consegna))}<br />Consegna indicativa entro ${o.consegna_indicativa_giorni} giorni lavorativi dalla conferma.`,
+  ];
+  if (p.richiede_iban && p.iban) {
+    blocchi.push(`<strong>Pagamento con bonifico:</strong> ${formattaEuro(o.totale_cent)} a ${esc(p.intestatario ?? o.snapshot_societa.ragione_sociale)}<br />IBAN ${formattaIban(p.iban)}<br />Causale: ordine ${o.numero}<br />Spediremo appena riceveremo il pagamento.`);
+  } else {
+    blocchi.push(`<strong>Pagamento:</strong> ${esc(p.descrizione)}${p.contrassegno ? ` – pagherai ${formattaEuro(o.totale_cent)} al corriere alla consegna` : ""}`);
+  }
+  blocchi.push(`<strong>Venditore:</strong> ${esc(o.snapshot_societa.ragione_sociale)} – ${esc(o.snapshot_societa.sede_legale)} – P.IVA ${esc(o.snapshot_societa.partita_iva)}`);
+  blocchi.push({
+    html: `<p style="font-size:13px;line-height:1.5;color:#5a6a70;margin:0 0 14px;white-space:pre-line"><strong>Condizioni di vendita accettate (versione ${condizioni.versione})</strong><br />${esc(condizioni.testo.replace(/\*\*/g, ""))}</p>`,
+    testo: `Condizioni di vendita accettate (versione ${condizioni.versione}):\n${condizioni.testo.replace(/\*\*/g, "")}`,
+  });
+  return componi(c.email, `Magistra – Ordine ${o.numero} ricevuto`, blocchi, { testo: "Vedi il tuo ordine", url: `${sito()}/negozio/ordini/${o.id}` });
+}
+
+export function emailNuovoOrdinePrivatoAdmin(a: string[], o: Ordine): Email {
+  const c = o.snapshot_cliente;
+  return componi(
+    a,
+    `Magistra – Nuovo ordine privato ${o.numero} da ${c.ragione_sociale}`,
+    [
+      `Nuovo ordine <strong>${o.numero}</strong> dal cliente privato <strong>${esc(c.ragione_sociale)}</strong> (C.F. ${esc(c.codice_fiscale)}, ${esc(c.consegna?.citta ?? "")}).`,
+      tabellaPrivato(o),
+      datiSocieta(o),
+      datiPagamento(o),
+    ],
+    { testo: "Apri l'ordine", url: `${sito()}/admin/ordini/${o.id}` },
+  );
+}
+
 export type DatiSpedizioneEmail = { ddt_numero: string; ddt_data: string; corriere: string | null; tracking: string | null; colli: number | null; differenze: string[] };
 
 const TESTI_STATO: Partial<Record<Ordine["stato"], (numero: string) => string>> = {
@@ -115,7 +176,7 @@ const TESTI_STATO: Partial<Record<Ordine["stato"], (numero: string) => string>> 
 export function emailCambioStato(o: Ordine, messaggio: string | null, spedizione?: DatiSpedizioneEmail): Email {
   const c = o.snapshot_cliente;
   const testo = TESTI_STATO[o.stato]?.(o.numero) ?? `l'ordine <strong>${o.numero}</strong> è ora nello stato «${o.stato}».`;
-  const blocchi: Blocco[] = [`Gentile ${esc(c.titolare)},`, testo];
+  const blocchi: Blocco[] = [o.canale === "privati" ? `Ciao ${esc(c.nome ?? c.titolare)},` : `Gentile ${esc(c.titolare)},`, testo];
   if (messaggio) blocchi.push(`<strong>Messaggio:</strong> ${esc(messaggio)}`);
   if (spedizione) {
     blocchi.push(
@@ -127,7 +188,7 @@ export function emailCambioStato(o: Ordine, messaggio: string | null, spedizione
     if (spedizione.differenze.length) blocchi.push(`<strong>Differenze rispetto all'ordine:</strong><br />${spedizione.differenze.map(esc).join("<br />")}`);
     blocchi.push("Alla consegna controlla i colli e annota eventuali danni sul documento del corriere.");
   }
-  if (o.stato === "modificato") blocchi.push(tabellaRighe(o), datiPagamento(o));
+  if (o.stato === "modificato") blocchi.push(o.canale === "privati" ? tabellaPrivato(o) : tabellaRighe(o), datiPagamento(o));
   blocchi.push(datiSocieta(o));
   const oggetto: Partial<Record<Ordine["stato"], string>> = {
     confermato: "confermato",
@@ -141,7 +202,7 @@ export function emailCambioStato(o: Ordine, messaggio: string | null, spedizione
   };
   return componi(c.email, `Magistra – Ordine ${o.numero} ${oggetto[o.stato] ?? "aggiornato"}`, blocchi, {
     testo: "Vedi l'ordine",
-    url: `${sito()}/farmacia/ordini/${o.id}`,
+    url: `${sito()}/${o.canale === "privati" ? "negozio" : "farmacia"}/ordini/${o.id}`,
   });
 }
 
@@ -154,7 +215,7 @@ export function emailRichiestaEvasione(
   allegati: NonNullable<Email["allegati"]>,
 ): Email {
   const elenco = ordini
-    .map((o) => `${o.numero} – ${esc(o.snapshot_cliente.ragione_sociale)} (${esc(o.snapshot_cliente.consegna?.citta ?? "")}) – fattura ${esc(o.snapshot_societa.nome_breve)}${o.snapshot_pagamento.contrassegno ? ` – <strong>CONTRASSEGNO ${formattaEuro(o.totale_cent)}</strong>` : ""}`)
+    .map((o) => `${o.numero} – ${o.canale === "privati" ? "privato " : ""}${esc(o.snapshot_cliente.ragione_sociale)} (${esc(o.snapshot_cliente.consegna?.citta ?? "")}) – fattura ${esc(o.snapshot_societa.nome_breve)}${o.snapshot_pagamento.contrassegno ? ` – <strong>CONTRASSEGNO ${formattaEuro(o.totale_cent)}</strong>` : ""}`)
     .join("<br />");
   const email = componi(
     destinatari,

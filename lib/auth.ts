@@ -11,6 +11,7 @@ export type Profilo = {
   nome: string | null;
   email: string | null;
   farmacia_id: string | null;
+  privato_id: string | null;
 };
 
 export type Utente = { id: string; email: string; profilo: Profilo | null };
@@ -23,7 +24,7 @@ export const utenteCorrente = cache(async (): Promise<Utente | null> => {
   if (!claims?.sub) return null;
   const { data: profilo } = await db
     .from("profili_utente")
-    .select("id, ruolo, nome, email, farmacia_id")
+    .select("id, ruolo, nome, email, farmacia_id, privato_id")
     .eq("id", claims.sub)
     .maybeSingle();
   return { id: claims.sub, email: String(claims.email ?? ""), profilo: (profilo as Profilo | null) ?? null };
@@ -37,6 +38,8 @@ export function paginaIniziale(ruolo: Ruolo | undefined): string {
       return "/admin";
     case "farmacia":
       return "/farmacia";
+    case "privato":
+      return "/negozio";
     default:
       return "/";
   }
@@ -63,6 +66,17 @@ export async function richiediFarmaciaAttiva(): Promise<Utente & { profilo: Prof
   const { data } = await db.rpc("farmacia_attiva");
   if (!data || !utente.profilo.farmacia_id) redirect("/farmacia");
   return { ...utente, farmaciaId: utente.profilo.farmacia_id };
+}
+
+/** Cliente privato con account attivo (non bloccato). */
+export async function richiediPrivato(): Promise<Utente & { profilo: Profilo; privatoId: string }> {
+  const utente = await utenteCorrente();
+  if (!utente) redirect("/accesso?area=privati");
+  if (utente.profilo?.ruolo !== "privato" || !utente.profilo.privato_id) redirect(paginaIniziale(utente.profilo?.ruolo));
+  const db = await creaClientServer();
+  const { data } = await db.rpc("privato_attivo");
+  if (!data) redirect("/negozio?bloccato=1");
+  return { ...utente, profilo: utente.profilo, privatoId: utente.profilo.privato_id };
 }
 
 export const richiediAdmin = () => richiediRuolo("admin");

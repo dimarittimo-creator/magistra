@@ -94,6 +94,12 @@ tests/               Vitest + Playwright
 - Storico anche per prodotti, sconti sui lotti, spedizioni e promozioni. `import_magazzino.contenuto` conserva il file letto tra anteprima e conferma.
 - Documenti: `lib/documents/richiesta-evasione.tsx` (PDF con @react-pdf/renderer + Excel), `lib/documents/excel-magazzino.ts`; invio in `lib/deposito/invio.ts`; fatturazione in `lib/fatturazione.ts`.
 
+## Fase 5 – area Privati
+- Tabelle `privati`, `sconti_privati`, `spese_spedizione`, `carrello_privati` (per prodotto); indirizzi e ordini collegati anche ai privati; funzioni `registra_privato`, `invia_ordine_privato`, `area_privati_attivabile` e trigger che rifiuta l'attivazione online senza spese e condizioni definitive.
+- Regole pure: `lib/sconti-privati.ts` (sconto migliore, copia mese, promemoria), `prezzoPrivato` / `calcolaTotaliPrivati` / `speseSpedizione` in `lib/pricing`, `assegnaLottiPrivato` in `lib/availability`.
+- Negozio lato server `lib/negozio.ts` (chiave di servizio, espone solo i dati per il cliente); pagine in `app/(privati)/negozio`.
+- Negli ordini privati le colonne `prezzo_farmacia_ivato_cent` / `prezzo_farmacia_netto_cent` contengono il prezzo applicato al privato; `spese_spedizione_cent` è IVA inclusa ed è compresa in imponibile, IVA e totale.
+
 ## Job pianificati (Vercel Cron)
 - Ogni 15 minuti: `/api/cron/scadenze` (prenotazioni scadute) e `/api/cron/deposito` (invio cumulativo all'orario impostato, sollecito DDT mancanti). Entrambi protetti da `CRON_SECRET`.
 - Ogni 15 minuti: scadenza prenotazioni non confermate; attivazione/disattivazione promozioni.

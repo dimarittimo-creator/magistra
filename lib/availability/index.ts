@@ -82,6 +82,37 @@ export function statoProdotto(
   return { stato: "non_disponibile", disponibile: 0 };
 }
 
+/**
+ * Assegnazione automatica dei lotti ai privati (docs/AREA_PRIVATI.md §4): tra i lotti vendibili con almeno
+ * N mesi di vita residua, prima quello con la scadenza più vicina; se non basta si prosegue col successivo.
+ * I lotti sotto la soglia restano per le farmacie. Restituisce null se la quantità non è disponibile.
+ */
+export function assegnaLottiPrivato<L extends { id: string; scadenza: DataISO | null; disponibile: number; stato: StatoLotto }>(
+  lotti: L[],
+  quantita: number,
+  opzioni: { oggi: DataISO; mesiMinimi: number },
+): { lotto: L; quantita: number }[] | null {
+  const soglia = aggiungiMesi(opzioni.oggi, opzioni.mesiMinimi);
+  const idonei = lotti
+    .filter((l) => l.stato === "vendibile" && l.scadenza && l.scadenza >= soglia && l.disponibile > 0)
+    .sort((a, b) => a.scadenza!.localeCompare(b.scadenza!));
+  const assegnati: { lotto: L; quantita: number }[] = [];
+  let resto = quantita;
+  for (const l of idonei) {
+    if (resto <= 0) break;
+    const q = Math.min(resto, l.disponibile);
+    assegnati.push({ lotto: l, quantita: q });
+    resto -= q;
+  }
+  return resto > 0 ? null : assegnati;
+}
+
+/** Quantità vendibile ai privati: somma dei lotti con almeno N mesi di vita residua. */
+export function disponibilePrivati(lotti: { scadenza: DataISO | null; disponibile: number; stato: StatoLotto }[], opzioni: { oggi: DataISO; mesiMinimi: number }): number {
+  const soglia = aggiungiMesi(opzioni.oggi, opzioni.mesiMinimi);
+  return lotti.filter((l) => l.stato === "vendibile" && l.scadenza && l.scadenza >= soglia).reduce((s, l) => s + l.disponibile, 0);
+}
+
 /** I lotti scaduti e non vendibili non si mostrano alle farmacie. */
 export function lottoVisibile(stato: StatoLotto): boolean {
   return stato !== "scaduto" && stato !== "non_vendibile" && stato !== "prezzo_mancante";

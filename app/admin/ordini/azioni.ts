@@ -131,6 +131,19 @@ export async function modificaOrdine(id: string, m: ModificaOrdine): Promise<Sta
   return { ok: true, messaggio: "Ordine modificato e confermato: la farmacia riceve il riepilogo aggiornato." };
 }
 
+/** Ordini dei privati con bonifico: vanno al deposito solo dopo che l'admin segna il pagamento ricevuto. */
+export async function segnaPagamentoRicevuto(id: string): Promise<StatoModulo> {
+  const utente = await richiediStaff();
+  const db = await creaClientServer();
+  const { data: o } = await db.from("ordini").select("stato, pagamento_ricevuto_il").eq("id", id).single();
+  if (!o || o.pagamento_ricevuto_il) return { messaggio: "Pagamento già registrato." };
+  await db.from("ordini").update({ pagamento_ricevuto_il: new Date().toISOString() }).eq("id", id);
+  await db.from("storico_stati").insert({ ordine_id: id, da: o.stato, a: o.stato, utente: utente.id, messaggio: "Pagamento ricevuto" });
+  await registraOperazione(db, utente.id, { azione: "pagamento_ricevuto", entita: "ordini", entitaId: id });
+  aggiorna(id);
+  return { ok: true, messaggio: "Pagamento registrato: ora l'ordine può partire per il deposito." };
+}
+
 export async function inviaAlDeposito(id: string): Promise<StatoModulo> {
   const utente = await richiediStaff();
   const esito = await inviaOrdiniAlDeposito(creaClientAdmin(), [id], { modalita: "singola", utente: utente.id });

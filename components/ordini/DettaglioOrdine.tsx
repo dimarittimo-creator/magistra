@@ -10,7 +10,7 @@ export function BadgeStatoOrdine({ stato }: { stato: Ordine["stato"] }) {
   return <span className={`pill ${e.classe}`}>{e.testo}</span>;
 }
 
-export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { ordine: Ordine; vista: "farmacia" | "admin"; spedizione?: Spedizione | null; azioniDdt?: React.ReactNode }) {
+export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { ordine: Ordine; vista: "farmacia" | "privato" | "admin"; spedizione?: Spedizione | null; azioniDdt?: React.ReactNode }) {
   const s = o.snapshot_societa;
   const c = o.snapshot_cliente;
   const p = o.snapshot_pagamento;
@@ -27,9 +27,9 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
         <a href={`/api/ordini/${o.id}/documento/excel`} className="btn btn-secondary btn-piccolo">Riepilogo Excel</a>
         {ddtReale ? (
           <a href={`/api/ordini/${o.id}/ddt`} target="_blank" rel="noreferrer" className="btn btn-secondary btn-piccolo">DDT (PDF)</a>
-        ) : (
+        ) : vista !== "privato" ? (
           <a href={`/api/ordini/${o.id}/documento/ddt-simulato`} target="_blank" rel="noreferrer" className="btn btn-secondary btn-piccolo">DDT simulato</a>
-        )}
+        ) : null}
       </nav>
       {spedizione && (
         <section className="panel p-5 border-slate" aria-labelledby="t-spedizione">
@@ -72,11 +72,11 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
           {s.pec && <p>PEC {s.pec}</p>}
         </section>
         <section className="panel p-5 text-sm space-y-1" aria-labelledby="t-cliente">
-          <h2 id="t-cliente" className="text-lg font-serif text-magistra-blu mb-2">{vista === "admin" ? "Farmacia" : "Consegna"}</h2>
+          <h2 id="t-cliente" className="text-lg font-serif text-magistra-blu mb-2">{vista === "admin" ? (o.canale === "privati" ? "Cliente privato" : "Farmacia") : "Consegna"}</h2>
           {vista === "admin" && (
             <>
               <p className="font-semibold">{c.ragione_sociale}</p>
-              <p>Codice {c.codice_farmacia} · P.IVA {c.partita_iva}</p>
+              <p>{o.canale === "privati" ? `C.F. ${c.codice_fiscale}` : `Codice ${c.codice_farmacia} · P.IVA ${c.partita_iva}`}</p>
               <p>{c.email} · {c.telefono}</p>
             </>
           )}
@@ -100,6 +100,9 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
         </section>
       </div>
 
+      {vista === "privato" ? (
+        <RighePrivato o={o} />
+      ) : (
       <section className="panel p-4 sm:p-6 overflow-x-auto" aria-labelledby="t-righe">
         <h2 id="t-righe" className="text-lg font-serif text-magistra-blu mb-3">Prodotti</h2>
         <table className="tabella min-w-[720px]">
@@ -143,6 +146,12 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
                 <td className="text-right">{formattaEuro(d.ivaCent)}</td>
               </tr>
             ))}
+            {o.spese_spedizione_cent > 0 && (
+              <tr>
+                <td colSpan={7} className="text-right text-muted">di cui spese di spedizione (IVA inclusa)</td>
+                <td className="text-right">{formattaEuro(o.spese_spedizione_cent)}</td>
+              </tr>
+            )}
             <tr>
               <td colSpan={7} className="text-right text-lg font-bold">Totale</td>
               <td className="text-right text-lg font-bold">{formattaEuro(o.totale_cent)}</td>
@@ -150,6 +159,7 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
           </tfoot>
         </table>
       </section>
+      )}
 
       <section className="panel p-5" aria-labelledby="t-storico">
         <h2 id="t-storico" className="text-lg font-serif text-magistra-blu mb-3">Stato</h2>
@@ -165,5 +175,41 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
         </ol>
       </section>
     </div>
+  );
+}
+
+/** Prodotti dell'ordine come li vede il cliente privato: prezzi IVA inclusa, niente lotti. */
+function RighePrivato({ o }: { o: Ordine }) {
+  const perProdotto = new Map<string, { nome: string; quantita: number; pieno: number; prezzo: number; sconto: number }>();
+  for (const r of o.righe) {
+    const v = perProdotto.get(r.prodotto_codice) ?? { nome: r.prodotto_nome, quantita: 0, pieno: r.prezzo_pubblico_cent, prezzo: r.prezzo_farmacia_ivato_cent, sconto: r.sconto_applicato };
+    v.quantita += r.quantita;
+    perProdotto.set(r.prodotto_codice, v);
+  }
+  return (
+    <section className="panel p-4 sm:p-6" aria-labelledby="t-righe">
+      <h2 id="t-righe" className="text-lg font-serif text-magistra-blu mb-3">Prodotti</h2>
+      <ul className="divide-y divide-line">
+        {[...perProdotto.entries()].map(([codice, v]) => (
+          <li key={codice} className="py-3 flex flex-wrap justify-between gap-3">
+            <span>
+              {v.nome} × {v.quantita}
+              <span className="block text-sm text-muted">
+                {v.sconto > 0 && <><s>{formattaEuro(v.pieno)}</s>{" "}</>}
+                {formattaEuro(v.prezzo)} cad.{v.sconto > 0 && ` (−${v.sconto.toLocaleString("it-IT")}%)`}
+              </span>
+            </span>
+            <span className="font-semibold tabular-nums">{formattaEuro(v.prezzo * v.quantita)}</span>
+          </li>
+        ))}
+      </ul>
+      <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-6 gap-y-1 max-w-sm ml-auto text-sm">
+        <dt className="text-muted">Spedizione</dt>
+        <dd className="text-right">{o.spese_spedizione_cent ? formattaEuro(o.spese_spedizione_cent) : "gratuita"}</dd>
+        <dt className="text-lg font-bold border-t border-line pt-2">Totale</dt>
+        <dd className="text-lg font-bold text-right border-t border-line pt-2">{formattaEuro(o.totale_cent)}</dd>
+        <dt className="text-xs text-muted col-span-2 text-right">IVA inclusa ({formattaEuro(o.iva_cent)})</dt>
+      </dl>
+    </section>
   );
 }

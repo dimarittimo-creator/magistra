@@ -9,6 +9,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     { href: "/admin", testo: "Cruscotto", esatta: true },
     { href: "/admin/ordini", testo: "Ordini" },
     { href: "/admin/farmacie", testo: "Farmacie" },
+    { href: "/admin/privati", testo: "Clienti privati" },
     { href: "/admin/prodotti", testo: "Prodotti" },
     ...(admin
       ? [
@@ -16,6 +17,8 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           { href: "/admin/magazzino", testo: "Magazzino" },
           { href: "/admin/sconti", testo: "Sconti e prezzi" },
           { href: "/admin/promozioni", testo: "Promozioni" },
+          { href: "/admin/sconti-privati", testo: "Sconti privati" },
+          { href: "/admin/area-privati", testo: "Area Privati" },
           { href: "/admin/gruppi", testo: "Gruppi" },
           { href: "/admin/pagamenti", testo: "Pagamenti" },
           { href: "/admin/documenti", testo: "Condizioni e privacy" },

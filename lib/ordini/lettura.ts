@@ -6,8 +6,14 @@ import type { StatoOrdine } from "./stati";
 
 export type IndirizzoSnapshot = { presso: string | null; indirizzo: string; cap: string; citta: string; provincia: string };
 
+/**
+ * Cliente dell'ordine. Per i privati `ragione_sociale` è "Nome Cognome", `titolare` il nome,
+ * partita IVA e codice farmacia sono vuoti.
+ */
 export type SnapshotCliente = {
-  tipo: "farmacia";
+  tipo: "farmacia" | "privato";
+  nome?: string;
+  cognome?: string;
   ragione_sociale: string;
   titolare: string;
   partita_iva: string;
@@ -48,6 +54,8 @@ export type SnapshotPagamento = {
   /** IBAN della società che fattura, solo per il bonifico. */
   iban: string | null;
   intestatario: string | null;
+  /** Costo aggiuntivo della modalità (es. contrassegno), compreso nelle spese dell'ordine */
+  costo_aggiuntivo_cent?: number;
 };
 
 export type RigaOrdine = {
@@ -75,6 +83,8 @@ export type Ordine = {
   numero: string;
   canale: "farmacie" | "privati";
   farmacia_id: string | null;
+  privato_id: string | null;
+  pagamento_ricevuto_il: string | null;
   societa_id: string;
   deposito_id: string;
   stato: StatoOrdine;

@@ -70,7 +70,7 @@ function RichiestaPdf({ o, deposito, conPrezzi }: { o: Ordine; deposito: DatiDep
           <View style={s.riquadro}>
             <Text style={s.etichetta}>Destinatario</Text>
             <Text style={s.grassetto}>{c.ragione_sociale}</Text>
-            <Text>Codice farmacia {c.codice_farmacia} · P.IVA {c.partita_iva}</Text>
+            <Text>{o.canale === "privati" ? `Cliente privato · C.F. ${c.codice_fiscale}` : `Codice farmacia ${c.codice_farmacia} · P.IVA ${c.partita_iva}`}</Text>
             <Text>Consegna: {formattaIndirizzoSnapshot(c.consegna)}</Text>
             <Text>Telefono {c.telefono}</Text>
           </View>
@@ -132,8 +132,9 @@ export async function excelRichiestaEvasione(o: Ordine, deposito: DatiDeposito, 
     ["Mittente DDT (società)", `${soc.ragione_sociale} – P.IVA ${soc.partita_iva}`],
     ["Deposito di partenza", `${deposito.nome} – ${deposito.indirizzo}`],
     ["Destinatario", c.ragione_sociale],
-    ["Codice farmacia", c.codice_farmacia],
-    ["Partita IVA", c.partita_iva],
+    ...(o.canale === "privati"
+      ? ([["Codice fiscale", c.codice_fiscale]] as [string, string][])
+      : ([["Codice farmacia", c.codice_farmacia], ["Partita IVA", c.partita_iva]] as [string, string][])),
     ["Indirizzo di consegna", formattaIndirizzoSnapshot(c.consegna)],
     ["Telefono", c.telefono],
     ["Pagamento", o.snapshot_pagamento.descrizione],

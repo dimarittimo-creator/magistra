@@ -4,7 +4,7 @@ import { creaClientServer } from "@/lib/supabase/server";
 
 // Download del DDT reale: la farmacia solo per i propri ordini (RLS), lo staff per tutti.
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await autorizza("farmacia", "admin", "operatore"))) return nonAutorizzato();
+  if (!(await autorizza("farmacia", "privato", "admin", "operatore"))) return nonAutorizzato();
   const { id } = await params;
   const db = await creaClientServer();
   const { data: sped } = await db.from("spedizioni").select("ddt_numero, ddt_pdf_path").eq("ordine_id", id).maybeSingle();

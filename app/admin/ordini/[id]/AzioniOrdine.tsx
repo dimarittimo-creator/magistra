@@ -5,7 +5,7 @@ import { Campo, EsitoModulo, PulsanteInvio } from "@/components/moduli";
 import type { StatoModulo } from "@/lib/farmacie/dati";
 import { formattaEuro } from "@/lib/formato";
 import type { StatoOrdine } from "@/lib/ordini/stati";
-import { caricaPdfDdt, cambiaStato, inviaAlDeposito, modificaOrdine, registraDdt } from "../azioni";
+import { caricaPdfDdt, cambiaStato, inviaAlDeposito, modificaOrdine, registraDdt, segnaPagamentoRicevuto } from "../azioni";
 
 type Riga = { id: string; prodotto_codice: string; prodotto_nome: string; codice_lotto: string; lotto_id: string; quantita: number; quantita_omaggio: number; prezzo_farmacia_netto_cent: number };
 type Opzione = { id: string; nome: string };
@@ -171,6 +171,17 @@ function FormDdt({ id, righe, lotti }: { id: string; righe: Riga[]; lotti: Recor
   );
 }
 
+function PagamentoRicevuto({ id }: { id: string }) {
+  const [stato, azione] = useActionState<StatoModulo>(() => segnaPagamentoRicevuto(id), {});
+  return (
+    <form action={azione} className="space-y-2 rounded-lg border border-amber p-4">
+      <p className="font-semibold">In attesa del bonifico del cliente: l&apos;ordine parte per il deposito solo dopo il pagamento.</p>
+      <EsitoModulo ok={stato.ok} messaggio={stato.messaggio} />
+      {!stato.ok && <PulsanteInvio inCorso="…">Segna pagamento ricevuto</PulsanteInvio>}
+    </form>
+  );
+}
+
 export function CaricaPdfDdt({ ordineId }: { ordineId: string }) {
   const [stato, azione] = useActionState<StatoModulo, FormData>(caricaPdfDdt.bind(null, ordineId), {});
   return (
@@ -194,6 +205,7 @@ export function AzioniOrdine(p: {
   lottiPerProdotto: Record<string, string[]>;
   cumulativa: boolean;
   orario: string;
+  attesaBonifico: boolean;
 }) {
   const [modifica, setModifica] = useState(false);
   const modificabile = ["inviato", "in_verifica", "confermato", "modificato"].includes(p.stato);
@@ -209,7 +221,8 @@ export function AzioniOrdine(p: {
           {p.stato === "inviato" && <CambioStato id={p.id} nuovo="in_verifica" testo="Prendi in verifica" variante="secondary" />}
         </div>
       )}
-      {(p.stato === "confermato" || p.stato === "modificato") && <InvioDeposito id={p.id} cumulativa={p.cumulativa} orario={p.orario} />}
+      {p.attesaBonifico && <PagamentoRicevuto id={p.id} />}
+      {(p.stato === "confermato" || p.stato === "modificato") && !p.attesaBonifico && <InvioDeposito id={p.id} cumulativa={p.cumulativa} orario={p.orario} />}
       {p.stato === "inviato_deposito" && <CambioStato id={p.id} nuovo="in_preparazione" testo="Segna «in preparazione»" variante="secondary" />}
       {(p.stato === "inviato_deposito" || p.stato === "in_preparazione") && (
         <section className="space-y-3">

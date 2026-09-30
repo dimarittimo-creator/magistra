@@ -7,7 +7,7 @@ import { creaClientServer } from "@/lib/supabase/server";
 // Documenti dell'ordine: /api/ordini/<id>/documento/pdf | excel | ddt-simulato
 // La farmacia scarica solo i propri ordini (RLS), lo staff tutti.
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string; tipo: string }> }) {
-  if (!(await autorizza("farmacia", "admin", "operatore"))) return nonAutorizzato();
+  if (!(await autorizza("farmacia", "privato", "admin", "operatore"))) return nonAutorizzato();
   const { id, tipo } = await params;
   const db = await creaClientServer();
   const ordine = await leggiOrdine(db, id);

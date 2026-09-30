@@ -21,8 +21,12 @@ export async function inviaOrdiniAlDeposito(
   const conPrezzi = Boolean(imp?.prezzi_in_richiesta_evasione);
 
   const ordini = (await Promise.all(ordiniIds.map((id) => leggiOrdine(db, id)))).filter((o): o is Ordine => !!o);
-  const pronti = ordini.filter((o) => o.stato === "confermato" || o.stato === "modificato");
-  for (const o of ordini.filter((x) => !pronti.includes(x))) esito.errori.push(`${o.numero}: non è confermato`);
+  // Privati con bonifico anticipato: al deposito solo dopo il pagamento ricevuto (docs/AREA_PRIVATI.md §6)
+  const attesaPagamento = (o: Ordine) => o.canale === "privati" && o.snapshot_pagamento.richiede_iban && !o.pagamento_ricevuto_il;
+  const pronti = ordini.filter((o) => (o.stato === "confermato" || o.stato === "modificato") && !attesaPagamento(o));
+  for (const o of ordini.filter((x) => !pronti.includes(x))) {
+    esito.errori.push(`${o.numero}: ${attesaPagamento(o) ? "in attesa del pagamento con bonifico" : "non è confermato"}`);
+  }
 
   for (const [depositoId, gruppo] of Map.groupBy(pronti, (o) => o.deposito_id)) {
     const { data: sede } = await db

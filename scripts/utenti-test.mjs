@@ -117,6 +117,28 @@ for (const f of farmacie) {
   credenziali.push([`Farmacia ${f.stato === "attiva" ? "attiva" : "in attesa"}`, f.email, password]);
 }
 
+// Cliente privato
+{
+  const email = "privato@magistra.test";
+  const password = generaPassword();
+  const u = await utente(email, password);
+  if (u.nuovo) {
+    const ind = { indirizzo: "Via Chiaia, 10", cap: "80121", citta: "Napoli", provincia: "NA", presso: "" };
+    const { error } = await db.rpc("registra_privato", {
+      p_utente: u.id,
+      p_email: email,
+      p_privato: { nome: "Mario", cognome: "Rossi", codice_fiscale: "RSSMRA85T10A562S", telefono: "333 0000003" },
+      p_spedizione: ind,
+      p_fatturazione: ind,
+      p_marketing: false,
+      p_ip: "127.0.0.1",
+      p_user_agent: "script utenti-test",
+    });
+    if (error) throw error;
+  }
+  credenziali.push(["Cliente privato", email, password]);
+}
+
 const testo = [
   "CREDENZIALI DI PROVA – solo per il sito in locale (http://localhost:3000)",
   "Non usarle mai sul sito online. Rieseguendo «npm run db:utenti-test» le password cambiano.",

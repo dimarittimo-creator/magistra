@@ -52,6 +52,7 @@ export type ProdottoCatalogo = {
   /** Prezzo al pubblico che vale per questa farmacia (listino del gruppo se c'è) */
   prezzo_pubblico_cent: number | null;
   prezzoDiGruppo: boolean;
+  visibile_privati: boolean;
   minimo_ordine: number;
   multiplo: number;
   stato: StatoProdotto;
@@ -75,6 +76,7 @@ type RigaProdotto = {
   multiplo: number;
   soglia_esaurimento: number | null;
   attivo: boolean;
+  visibile_privati: boolean;
   linea: { id: string; nome: string } | null;
   area: { id: string; nome: string } | null;
 };
@@ -102,7 +104,7 @@ export async function caricaCatalogo(
   const oggi = opzioni.oggi ?? oggiRoma();
   let qProdotti = db
     .from("prodotti")
-    .select("codice, nome, formato, descrizione, immagine_path, prezzo_pubblico_cent, iva_override, minimo_ordine, multiplo, soglia_esaurimento, attivo, linea:linea_id(id, nome), area:area_id(id, nome)")
+    .select("codice, nome, formato, descrizione, immagine_path, prezzo_pubblico_cent, iva_override, minimo_ordine, multiplo, soglia_esaurimento, attivo, visibile_privati, linea:linea_id(id, nome), area:area_id(id, nome)")
     .order("nome");
   let qLotti = db.from("lotti").select("id, prodotto_codice, deposito_id, codice_lotto, scadenza, giacenza, sconto_manuale");
   let qGiacenze = db.from("giacenze_prodotto").select("prodotto_codice, deposito_id, totale_dichiarato");
@@ -205,6 +207,7 @@ export async function caricaCatalogo(
       iva,
       prezzo_pubblico_cent: prezzo,
       prezzoDiGruppo: dedicato?.prezzo_pubblico_cent != null,
+      visibile_privati: p.visibile_privati,
       minimo_ordine: p.minimo_ordine,
       multiplo: p.multiplo,
       stato,

@@ -14,7 +14,7 @@ export default async function OrdiniAdmin({ searchParams }: { searchParams: Prom
   const db = await creaClientServer();
   let q = db
     .from("ordini")
-    .select("id, numero, stato, creato_il, scade_il, totale_cent, snapshot_cliente, snapshot_societa")
+    .select("id, numero, canale, stato, creato_il, scade_il, totale_cent, snapshot_cliente, snapshot_societa")
     .order("creato_il", { ascending: false })
     .limit(300);
   if (filtro) q = q.eq("stato", filtro);
@@ -22,6 +22,7 @@ export default async function OrdiniAdmin({ searchParams }: { searchParams: Prom
   const ordini = (data ?? []) as unknown as {
     id: string;
     numero: string;
+    canale: "farmacie" | "privati";
     stato: StatoOrdine;
     creato_il: string;
     scade_il: string | null;
@@ -64,7 +65,7 @@ export default async function OrdiniAdmin({ searchParams }: { searchParams: Prom
               <tr>
                 <th>Numero</th>
                 <th>Data</th>
-                <th>Farmacia</th>
+                <th>Cliente</th>
                 <th>Fattura</th>
                 <th className="text-right">Totale</th>
                 <th>Stato</th>
@@ -78,7 +79,7 @@ export default async function OrdiniAdmin({ searchParams }: { searchParams: Prom
                   <td className="whitespace-nowrap">{formattaDataOra(o.creato_il)}</td>
                   <td>
                     {o.snapshot_cliente.ragione_sociale}
-                    {o.snapshot_cliente.consegna && <div className="text-xs text-muted">{o.snapshot_cliente.consegna.citta}</div>}
+                    <div className="text-xs text-muted">{o.canale === "privati" ? "Privato · " : ""}{o.snapshot_cliente.consegna?.citta}</div>
                   </td>
                   <td>{o.snapshot_societa.nome_breve}</td>
                   <td className="text-right font-semibold">{formattaEuro(o.totale_cent)}</td>

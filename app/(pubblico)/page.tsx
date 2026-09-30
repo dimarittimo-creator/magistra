@@ -31,7 +31,7 @@ export default function Home() {
         <SceltaArea
           titolo="Sei un privato?"
           testo="Acquista gli integratori a prezzo al pubblico con gli sconti del mese e la consegna a casa."
-          href="/accesso?area=privati"
+          href="/negozio"
           etichetta="Entra nell'area Privati"
         />
       </section>

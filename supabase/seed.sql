@@ -87,3 +87,8 @@ insert into public.modalita_pagamento (codice, descrizione, canale, richiede_iba
   ('riba_60', 'RIBA 60 giorni', 'farmacie', false, false, 30),
   ('riba_90', 'RIBA 90 giorni', 'farmacie', false, false, 40),
   ('contrassegno', 'Contrassegno', 'farmacie', false, true, 50);
+-- Modalità di pagamento per i privati (docs/AREA_PRIVATI.md §6). La carta online è predisposta ma non attiva.
+insert into public.modalita_pagamento (codice, descrizione, canale, richiede_iban, contrassegno, attiva, ordine) values
+  ('bonifico_privati', 'Bonifico bancario anticipato', 'privati', true, false, true, 110),
+  ('contrassegno_privati', 'Contrassegno (pagamento alla consegna)', 'privati', false, true, true, 120),
+  ('carta_online', 'Carta di pagamento online (non ancora attiva)', 'privati', false, false, false, 130);

@@ -9,6 +9,8 @@ export function PiePagina() {
         <nav aria-label="Informazioni legali" className="flex flex-wrap gap-x-4 gap-y-1">
           <Link href="/privacy">Informativa privacy</Link>
           <Link href="/condizioni/farmacie">Condizioni di vendita farmacie</Link>
+          <Link href="/condizioni/privati">Condizioni di vendita privati</Link>
+          <Link href="/chi-siamo">Chi siamo</Link>
         </nav>
         <p>© {anno} Sagè Pharma S.r.l. · Bioeleva S.r.l.</p>
       </div>
