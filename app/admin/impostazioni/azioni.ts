@@ -42,6 +42,7 @@ export async function salvaImpostazioni(_prima: StatoModulo, fd: FormData): Prom
     prezzi_in_richiesta_evasione: Boolean(fd.get("prezzi_in_richiesta_evasione")),
     email_notifiche_admin: email,
     mesi_non_vendibile: intero("mesi_non_vendibile", 0, 60, true),
+    mesi_conservazione_chat: intero("mesi_conservazione_chat", 1, 120),
   };
   if (Object.keys(errori).length) return { errori, valori, messaggio: "Controlla i campi evidenziati." };
 

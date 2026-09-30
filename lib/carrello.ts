@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Catalogo, LottoCatalogo, ProdottoCatalogo } from "@/lib/catalogo";
+import { caricaCatalogo, type Catalogo, type LottoCatalogo, type ProdottoCatalogo } from "@/lib/catalogo";
 import { calcolaTotali, type Totali } from "@/lib/pricing";
 import { pezziOmaggio } from "@/lib/promozioni";
 
@@ -132,4 +132,36 @@ export function verificaCarrello(catalogo: Catalogo, salvate: { lotto_id: string
     problemiGenerali,
     inviabile: righe.length > 0 && righe.every((r) => r.problemi.length === 0) && problemiGenerali.length === 0,
   };
+}
+
+/**
+ * Aggiunge pezzi di un lotto al carrello della farmacia, senza superare il disponibile.
+ * Unico punto usato dal catalogo e dalle conferme dell'assistente.
+ */
+export async function aggiungiLottoAlCarrello(
+  db: SupabaseClient,
+  farmaciaId: string,
+  lottoId: string,
+  quantita: number,
+): Promise<{ ok: boolean; messaggio: string }> {
+  const { data: riga } = await db.from("lotti").select("prodotto_codice").eq("id", lottoId).maybeSingle();
+  if (!riga) return { ok: false, messaggio: "Lotto non trovato." };
+  const catalogo = await caricaCatalogo(db, { codice: riga.prodotto_codice, farmaciaId });
+  const lotto = catalogo.prodotti[0]?.lotti.find((l) => l.id === lottoId);
+  if (!lotto || lotto.stato !== "vendibile") return { ok: false, messaggio: "Questo lotto non è più disponibile." };
+
+  const { data: presente } = await db.from("carrello_righe").select("quantita").eq("farmacia_id", farmaciaId).eq("lotto_id", lottoId).maybeSingle();
+  const totale = (presente?.quantita ?? 0) + quantita;
+  if (totale > lotto.disponibile) {
+    return {
+      ok: false,
+      messaggio: presente
+        ? `Nel carrello hai già ${presente.quantita} pezzi di questo lotto: ne puoi aggiungere al massimo ${Math.max(lotto.disponibile - presente.quantita, 0)}.`
+        : `Disponibili solo ${lotto.disponibile} pezzi di questo lotto.`,
+    };
+  }
+
+  const { error } = await db.from("carrello_righe").upsert({ farmacia_id: farmaciaId, lotto_id: lottoId, quantita: totale });
+  if (error) return { ok: false, messaggio: "Non è stato possibile aggiornare il carrello. Riprova." };
+  return { ok: true, messaggio: `Nel carrello: ${totale} pezzi del lotto ${lotto.codice_lotto}.` };
 }

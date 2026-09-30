@@ -1,3 +1,4 @@
+import { Assistente } from "@/components/chat/Assistente";
 import { MenuArea } from "@/components/MenuArea";
 import { richiediFarmacia } from "@/lib/auth";
 import { creaClientServer } from "@/lib/supabase/server";
@@ -25,6 +26,7 @@ export default async function LayoutFarmacia({ children }: { children: React.Rea
     <>
       <MenuArea etichetta="Area farmacia" voci={voci} />
       {children}
+      {attiva ? <Assistente /> : null}
     </>
   );
 }

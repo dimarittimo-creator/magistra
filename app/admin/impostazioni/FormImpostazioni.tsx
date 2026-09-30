@@ -47,6 +47,8 @@ export function FormImpostazioni({ iniziali }: { iniziali: Record<string, string
           aiuto="Nuove iscrizioni, nuovi ordini, solleciti DDT. Più indirizzi separati da virgola; vuoto = tutti gli amministratori" />
         <Campo nome="mesi_non_vendibile" etichetta="Lotti non vendibili sotto (mesi di scadenza)" valore={v.mesi_non_vendibile} errore={e.mesi_non_vendibile}
           inputMode="numeric" aiuto="Predisposta, di norma vuota: se indicata, i lotti con scadenza più vicina non si vendono" />
+        <Campo nome="mesi_conservazione_chat" etichetta="Conservazione delle chat dell'assistente (mesi)" valore={v.mesi_conservazione_chat} errore={e.mesi_conservazione_chat}
+          inputMode="numeric" aiuto="Dopo questo periodo conversazioni e domande senza risposta si cancellano da sole (da 1 a 120 mesi)" />
       </fieldset>
 
       <EsitoModulo ok={stato.ok} messaggio={stato.messaggio} />

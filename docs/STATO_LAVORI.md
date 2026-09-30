@@ -7,8 +7,8 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 2 – Catalogo e prenotazione farmacie — **completata** e approvata (29/09/2026).
 - [x] Fase 3 – Amministrazione e spedizioni al deposito — **completata** e approvata (29/09/2026).
 - [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
-- [x] Fase 5 – Area Privati (B2C) — **completata** (30/09/2026), in attesa dell'ok di Salvatore: test verdi (103 Vitest, 26 Playwright). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
-- [ ] Fase 6 – Chatbot
+- [x] Fase 5 – Area Privati (B2C) — **completata** e approvata (30/09/2026). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
+- [x] Fase 6 – Chatbot — **completata** (30/09/2026), in attesa dell'ok di Salvatore: test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
 - [ ] Fase 7 – Messa online
 
 ## Fase 0 – cosa c'è
@@ -43,6 +43,34 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 3. Email ricevute dal portale (casella di prova): http://127.0.0.1:54324
 4. Test automatici: `npm test` e `npm run test:e2e` (il sito deve essere avviato o si avvia da solo).
 5. Amministratore vero per la messa online: `npm run crea-admin -- email "Nome Cognome"`.
+
+## Fase 6 – cosa c'è
+- **Assistente nell'area farmacia**: pulsante «Assistente» sempre visibile in basso a destra (anche da tablet e telefono). All'apertura: **informativa** (conservazione, fornitore Anthropic, niente dati dei pazienti, link alla privacy) e dichiarazione chiara che si parla con un **assistente di intelligenza artificiale**; si inizia solo dopo «Ho letto».
+- **Risposte dai dati veri**, letti in tempo reale con i permessi della farmacia: ricerca prodotti, disponibilità, lotti, scadenze, sconti e prezzi farmacia, promozioni attive per quella farmacia, stato dei suoi ordini (con spedizione e link a documenti e DDT), condizioni di vendita, validità della prenotazione, tempi di consegna indicativi, modalità di pagamento consentite, società che fattura.
+- **Carrello con conferma esplicita**: l'assistente prepara una proposta (prodotto, lotto, scadenza, quantità) con i pulsanti **Conferma** / **Annulla**; solo «Conferma» mette la merce nel carrello, con gli stessi controlli del catalogo. "Il lotto con lo sconto migliore" = prezzo farmacia più basso.
+- **Base di conoscenza** (Admin → Assistente → Base di conoscenza, solo admin): schede prodotto, FAQ e documenti (testo incollato o file PDF/TXT/MD), destinatari (farmacie, privati, tutti; «medici» predisposto). L'assistente usa **solo i documenti approvati**; se un testo approvato viene modificato torna in bozza. Ricerca per parole in italiano; ricerca "per significato" (pgvector) già predisposta, si attiva con un servizio di embedding.
+- **Regole di comportamento**: niente prodotti, prezzi o stati inventati; informazioni sui prodotti solo dalla base di conoscenza, senza claim nuovi; nessun consiglio sul singolo paziente (rimanda al medico); se non sa, lo dice, **registra la domanda** e propone l'operatore.
+- **Passaggio a operatore** (pulsante o su richiesta): avviso email a tutti gli admin; nel pannello **Admin → Assistente** si vedono richieste aperte e storico; la risposta compare **nella stessa chat** e la farmacia riceve un'email. Chiudendo la richiesta le domande successive tornano all'assistente, che vede anche la risposta dell'operatore. Anche l'operatore (ruolo) può rispondere.
+- **Domande senza risposta** (Admin → Assistente → Domande senza risposta) da valutare, risolvere o ignorare.
+- **Conservazione**: le conversazioni si cancellano da sole dopo i mesi indicati in Impostazioni (predefinito 24). **Limiti**: 15 messaggi in 5 minuti, 200 al giorno per utente.
+- **Senza chiave Anthropic**: in locale «modalità di prova» (risposte simulate con parole chiave, stessi strumenti, gratis, segnalata in giallo nella chat); online le domande vanno direttamente a un operatore.
+- Registro dei fornitori di dati: `docs/FORNITORI_DATI.md` (Supabase, Vercel, Brevo, Anthropic).
+- Database: `20261001090000_fase6_chatbot.sql`; FAQ di esempio sull'uso del portale in `supabase/seed.sql`.
+- Test: `tests/unit/chat.test.ts`, `tests/e2e/fase6.spec.ts`.
+
+### Come provarlo (in locale, modalità di prova)
+1. Accedi come **farmacia.attiva@magistra.test** (password in `credenziali-test.txt`) → pulsante **Assistente** in basso a destra → leggi l'informativa → **Ho letto, inizia**.
+2. Prova frasi come: «disponibilità del prodotto 923813695» (NEUROPROTEX 15 CPR), «aggiungi 10 pezzi del prodotto 923813695» → **Conferma** → il carrello nel menu si aggiorna; «quali promozioni ci sono?», «a che punto è l'ordine P-2026-00052?», «come posso pagare?», «dove scarico il DDT?».
+3. Premi **Parla con un operatore**; come **admin@magistra.test** vai in **Assistente**, apri la richiesta e rispondi: la risposta compare nella chat della farmacia (email su http://127.0.0.1:54324).
+4. In **Assistente → Base di conoscenza** crea un documento, poi **Approva**: da quel momento l'assistente lo usa.
+In modalità di prova le risposte sono semplici e riconoscono solo alcune parole: con la chiave Anthropic l'assistente capisce frasi libere e risponde in modo naturale.
+
+### Da fornire / decidere
+- **Chiave Anthropic** (servizio a pagamento, costo a consumo): da creare su console.anthropic.com con i dati dell'azienda e da inserire in `.env.local` (`ANTHROPIC_API_KEY`); online si inserisce su Vercel in Fase 7.
+- **Contenuti della base di conoscenza**: schede prodotto (composizione, formato, modo d'uso, avvertenze) e FAQ approvate dal gruppo, coerenti con le notifiche al Ministero.
+- **Informativa privacy** definitiva: deve citare la chat, il fornitore Anthropic e la conservazione (vedi `docs/FORNITORI_DATI.md`).
+- Facoltativo: ricerca "per significato" (Voyage AI, a pagamento) — utile quando la base di conoscenza sarà ampia.
+- Assistente per i clienti privati: l'architettura è pronta, oggi è attivo solo per le farmacie.
 
 ## Fase 5 – cosa c'è
 - **Negozio** (`/negozio`), consultabile anche senza account: prezzo pieno, **sconto del mese**, prezzo finale IVA inclusa, "Disponibile / Non disponibile". Niente lotti, giacenze, prezzi o sconti farmacia (i dati arrivano dal server già filtrati, `lib/negozio.ts`). Prodotti visibili ai privati per default se hanno un prezzo (campo "Visibile nell'area Privati" nella scheda prodotto).

@@ -19,6 +19,7 @@
     "importa-dati": "tsx --env-file=.env.local scripts/importa-dati.mts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
     "@react-pdf/renderer": "^4.9.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
@@ -27,6 +28,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "server-only": "^0.0.1",
+    "unpdf": "^1.8.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
@@ -39,7 +41,6 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "unpdf": "^1.8.1",
     "vitest": "^5.0.2"
   },
   "engines": {

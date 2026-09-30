@@ -20,6 +20,7 @@ export default async function Impostazioni() {
     prezzi_in_richiesta_evasione: i.prezzi_in_richiesta_evasione ? "on" : "",
     email_notifiche_admin: (i.email_notifiche_admin ?? []).join(", "),
     mesi_non_vendibile: i.mesi_non_vendibile == null ? "" : String(i.mesi_non_vendibile),
+    mesi_conservazione_chat: String(i.mesi_conservazione_chat),
   };
   return (
     <div className="space-y-6">

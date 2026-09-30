@@ -72,8 +72,8 @@ tests/               Vitest + Playwright
 **Magazzino**
 - `import_magazzino`: file, deposito_id, tipo (`deposito_crystal` | `modello` | `listino`), data_giacenza, stato (`anteprima` | `applicato` | `annullato`), riepilogo, errori, utente.
 
-**Chatbot** (fase 6)
-- `kb_documenti`, `kb_frammenti` (embedding pgvector), `conversazioni`, `messaggi`, `richieste_operatore`, `domande_senza_risposta`.
+**Chatbot** (fase 6, dettagli nella sezione "Fase 6")
+- `kb_documenti`, `kb_frammenti` (indice testuale + embedding pgvector facoltativo), `conversazioni`, `messaggi`, `proposte_carrello`, `richieste_operatore`, `domande_senza_risposta`.
 
 **Controllo**
 - `registro_operazioni`: utente, azione, entità, id, prima/dopo (json), il.
@@ -100,7 +100,18 @@ tests/               Vitest + Playwright
 - Negozio lato server `lib/negozio.ts` (chiave di servizio, espone solo i dati per il cliente); pagine in `app/(privati)/negozio`.
 - Negli ordini privati le colonne `prezzo_farmacia_ivato_cent` / `prezzo_farmacia_netto_cent` contengono il prezzo applicato al privato; `spese_spedizione_cent` è IVA inclusa ed è compresa in imponibile, IVA e totale.
 
+## Fase 6 – assistente (chatbot)
+- **Separazione dal canale**: base di conoscenza (`lib/chat/kb.ts`), strumenti (`lib/chat/strumenti.ts`) e conversazioni (`lib/chat/conversazioni.ts`) non dipendono dalla chat web; la finestra `components/chat/Assistente.tsx` e la route `/api/assistente` sono solo il canale "chat". Una versione vocale userà le stesse funzioni (`conversazioni.canale = 'voce'`); `kb_documenti.pubblico` prevede già `medici`.
+- **Modello**: Claude Opus 5.5 con SDK ufficiale `@anthropic-ai/sdk` (`lib/chat/modello.ts`): streaming, ragionamento adattivo, sforzo `medium`, istruzioni fisse in cache (`lib/chat/prompt.ts`), riserva automatica lato server se i filtri di sicurezza rifiutano per errore (`fallbacks: "default"`). La storia inviata al modello è **solo accodata** (ogni turno si salva in `messaggi.api` e si rimanda identico); risposte dell'operatore e decisioni sulle proposte arrivano come note nel messaggio successivo dell'utente.
+- **Modalità** (`lib/chat/modalita.ts`): `ai` con la chiave; `prova` in locale senza chiave o nei test (cookie `magistra_assistente=prova`, mai in produzione) con risposte simulate che usano gli stessi strumenti (`lib/chat/modello-prova.ts`); `solo_operatore` online senza chiave.
+- **Strumenti** (con il client della farmacia: vale la RLS): `cerca_prodotti`, `dettaglio_prodotto`, `promozioni_attive` (da `lib/catalogo` → `lib/pricing`/`lib/availability`/`lib/promozioni`), `stato_ordini`, `informazioni_vendita` (impostazioni, pagamenti consentiti, società, condizioni in vigore), `cerca_informazioni` (base di conoscenza approvata), `proponi_aggiunta_carrello` (crea solo una proposta), `passa_a_operatore`, `registra_domanda_senza_risposta`. La merce entra nel carrello solo con «Conferma» (`decidiProposta` → `aggiungiLottoAlCarrello` in `lib/carrello.ts`, gli stessi controlli del catalogo).
+- **Database** (`20261001090000_fase6_chatbot.sql`): `kb_documenti` (bozza → approvato → archiviato; una modifica a un testo approvato lo rimette in bozza), `kb_frammenti` (paragrafi con indice testuale italiano e vettore pgvector facoltativo), funzione `cerca_kb` (solo documenti approvati; fonde ricerca per parole e per significato), `conversazioni`, `messaggi`, `proposte_carrello`, `richieste_operatore`, `domande_senza_risposta`, funzione `cancella_conversazioni_scadute`. Gli utenti leggono solo le proprie conversazioni; tutte le scritture passano dal server.
+- **Ricerca per significato** facoltativa (`lib/chat/embedding.ts`, Voyage AI con `VOYAGE_API_KEY`): senza chiave la ricerca è per parole.
+- **Limiti**: 2000 caratteri per messaggio, 15 messaggi in 5 minuti, 200 al giorno, 120 per conversazione, 8 giri di strumenti per risposta.
+- **Operatore**: `/admin/assistente` (richieste aperte, storico), `/admin/assistente/[id]` (risposta nella stessa chat, email al cliente), `/admin/assistente/domande`; base di conoscenza `/admin/assistente/conoscenza` (solo admin, upload PDF/TXT/MD).
+
 ## Job pianificati (Vercel Cron)
+- `/api/cron/scadenze` cancella anche le conversazioni oltre `impostazioni.mesi_conservazione_chat`.
 - Ogni 15 minuti: `/api/cron/scadenze` (prenotazioni scadute) e `/api/cron/deposito` (invio cumulativo all'orario impostato, sollecito DDT mancanti). Entrambi protetti da `CRON_SECRET`.
 - Ogni 15 minuti: scadenza prenotazioni non confermate; attivazione/disattivazione promozioni.
 - All'orario impostato: invio cumulativo a ciascun deposito.

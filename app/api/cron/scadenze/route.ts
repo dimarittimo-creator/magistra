@@ -12,6 +12,7 @@ import { creaClientAdmin } from "@/lib/supabase/admin";
 // - le prenotazioni non confermate entro la scadenza passano a "Scaduto", la merce torna disponibile
 //   e la farmacia riceve un'email;
 // - 5 giorni prima della fine del mese, se il mese dopo non ha sconti privati, promemoria all'admin (una volta).
+// - le conversazioni dell'assistente più vecchie del periodo di conservazione si cancellano.
 // Protetto da CRON_SECRET (Vercel lo invia come "Authorization: Bearer …").
 export async function GET(request: NextRequest) {
   const segreto = process.env.CRON_SECRET;
@@ -53,5 +54,10 @@ export async function GET(request: NextRequest) {
       if (promemoria) await db.from("impostazioni").update({ ultimo_promemoria_sconti: oggi }).eq("id", true);
     }
   }
-  return NextResponse.json({ scaduti: ids.length, promemoria });
+
+  // Chat dell'assistente oltre il periodo di conservazione (impostazioni.mesi_conservazione_chat)
+  const { data: chatCancellate, error: errChat } = await db.rpc("cancella_conversazioni_scadute");
+  if (errChat) console.error("[cron] cancellazione chat:", errChat.message);
+
+  return NextResponse.json({ scaduti: ids.length, promemoria, chatCancellate: chatCancellate ?? 0 });
 }
