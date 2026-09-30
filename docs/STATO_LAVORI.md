@@ -8,8 +8,8 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 3 – Amministrazione e spedizioni al deposito — **completata** e approvata (29/09/2026).
 - [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
 - [x] Fase 5 – Area Privati (B2C) — **completata** e approvata (30/09/2026). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
-- [x] Fase 6 – Chatbot — **completata** (30/09/2026), in attesa dell'ok di Salvatore: test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
-- [ ] Fase 7 – Messa online
+- [x] Fase 6 – Chatbot — **completata** e approvata (30/09/2026): test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
+- [ ] Fase 7 – Messa online — **in corso** (dal 30/09/2026)
 
 ## Fase 0 – cosa c'è
 - Next.js + TypeScript + Tailwind con i token colore di `GRAFICA.md` (chiaro e scuro) in `app/globals.css`; caratteri Tinos e Public Sans.
