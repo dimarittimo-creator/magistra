@@ -154,6 +154,9 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 ### Da sapere per la messa online
 - Il job ogni 15 minuti su Vercel richiede il piano Pro; con il piano gratuito si può eseguire una volta al giorno.
 
+## Decisioni del 30/09/2026 (Fase 7)
+- **Dominio**: magistraonline.it (registrato su Aruba). Indirizzo del portale **https://www.magistraonline.it**; magistraonline.it senza "www" rimanda lì. Email del portale inviate da **noreply@magistraonline.it** (Brevo, dominio autenticato con SPF e DKIM).
+
 ## Decisioni del 29/09/2026 (Fase 1)
 - **Codice farmacia**: lo assegna il portale all'iscrizione, numero progressivo da **0100** in avanti; la farmacia non lo inserisce e non si modifica (migrazione `20260929140000_codice_farmacia_progressivo.sql`).
 - **Avvisi di nuova iscrizione**: a tutti gli utenti admin.
