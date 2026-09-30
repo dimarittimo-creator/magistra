@@ -421,3 +421,24 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# ---------------------------------------------------------------------------
+# Produzione (Supabase Pro, Francoforte). Solo le differenze rispetto al locale:
+# si applicano con  npx supabase config push --project-ref lepykbcqppnqrintlcmu
+# Indirizzo provvisorio Vercel finché il dominio magistraonline.it non è attivo.
+# ---------------------------------------------------------------------------
+[remotes.produzione]
+project_id = "lepykbcqppnqrintlcmu"
+
+[remotes.produzione.auth]
+site_url = "https://magistra-kohl.vercel.app"
+additional_redirect_urls = [
+  "https://magistra-kohl.vercel.app/**",
+  "https://www.magistraonline.it/**",
+  "https://magistraonline.it/**",
+]
+
+# Verifica in due passaggi disponibile (consigliata per gli amministratori)
+[remotes.produzione.auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
