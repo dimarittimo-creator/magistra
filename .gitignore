@@ -32,3 +32,5 @@ credenziali-test.txt
 # Risultati dei test Playwright
 /test-results/
 /playwright-report/
+.vercel
+.env*
