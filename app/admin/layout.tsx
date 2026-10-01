@@ -29,6 +29,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           { href: "/admin/registro", testo: "Registro operazioni" },
         ]
       : []),
+    { href: "/admin/account", testo: "Il mio account" },
   ];
   return (
     <>
