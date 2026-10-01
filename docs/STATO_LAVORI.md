@@ -9,7 +9,7 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
 - [x] Fase 5 – Area Privati (B2C) — **completata** e approvata (30/09/2026). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
 - [x] Fase 6 – Chatbot — **completata** e approvata (30/09/2026): test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
-- [ ] Fase 7 – Messa online — **in corso** (dal 30/09/2026)
+- [ ] Fase 7 – Messa online — **in corso**: online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito, prezzi degli 8 prodotti mancanti, testi legali definitivi; area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
 
 ## Fase 0 – cosa c'è
 - Next.js + TypeScript + Tailwind con i token colore di `GRAFICA.md` (chiaro e scuro) in `app/globals.css`; caratteri Tinos e Public Sans.
