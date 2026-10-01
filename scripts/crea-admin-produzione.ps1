@@ -8,7 +8,8 @@ param(
   [string]$Nome = "",
   [string]$Progetto = "lepykbcqppnqrintlcmu"
 )
-$ErrorActionPreference = "Stop"
+# Gli avvisi della CLI (es. "nuova versione disponibile") non devono fermare lo script
+$ErrorActionPreference = "Continue"
 
 $json = (npx.cmd supabase projects api-keys --project-ref $Progetto -o json 2>$null) -join "`n"
 $servizio = (($json | ConvertFrom-Json) | Where-Object { $_.name -eq "service_role" }).api_key
