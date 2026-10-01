@@ -17,6 +17,8 @@ export async function inviaEmail(email: Email): Promise<boolean> {
   if (destinatari.length === 0) return false;
   const cc = (email.cc ?? []).filter((c) => c && !destinatari.includes(c));
   const mittente = process.env.EMAIL_MITTENTE || MITTENTE_PREDEFINITO;
+  // Le risposte dei clienti vanno a una casella letta davvero (il mittente è un "noreply")
+  const risposta = process.env.EMAIL_RISPOSTA || "";
   const base64 = (a: Allegato) => Buffer.from(a.contenuto).toString("base64");
 
   try {
@@ -28,6 +30,7 @@ export async function inviaEmail(email: Email): Promise<boolean> {
           sender: { email: mittente, name: "Magistra" },
           to: destinatari.map((a) => ({ email: a })),
           ...(cc.length ? { cc: cc.map((c) => ({ email: c })) } : {}),
+          ...(risposta ? { replyTo: { email: risposta } } : {}),
           subject: email.oggetto,
           htmlContent: email.html,
           textContent: email.testo,
@@ -47,6 +50,7 @@ export async function inviaEmail(email: Email): Promise<boolean> {
           From: { Email: mittente, Name: "Magistra" },
           To: destinatari.map((a) => ({ Email: a })),
           Cc: cc.map((c) => ({ Email: c })),
+          ...(risposta ? { ReplyTo: [{ Email: risposta }] } : {}),
           Subject: email.oggetto,
           HTML: email.html,
           Text: email.testo,
