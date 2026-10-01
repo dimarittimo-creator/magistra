@@ -425,13 +425,13 @@ enabled = true
 # ---------------------------------------------------------------------------
 # Produzione (Supabase Pro, Francoforte). Solo le differenze rispetto al locale:
 # si applicano con  npx supabase config push --project-ref lepykbcqppnqrintlcmu
-# Indirizzo provvisorio Vercel finché il dominio magistraonline.it non è attivo.
+# Indirizzo definitivo www.magistraonline.it (il dominio senza www vi rimanda); resta valido anche quello Vercel.
 # ---------------------------------------------------------------------------
 [remotes.produzione]
 project_id = "lepykbcqppnqrintlcmu"
 
 [remotes.produzione.auth]
-site_url = "https://magistra-kohl.vercel.app"
+site_url = "https://www.magistraonline.it"
 additional_redirect_urls = [
   "https://magistra-kohl.vercel.app/**",
   "https://www.magistraonline.it/**",
