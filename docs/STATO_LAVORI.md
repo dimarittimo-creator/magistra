@@ -154,6 +154,10 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 ### Da sapere per la messa online
 - Il job ogni 15 minuti su Vercel richiede il piano Pro; con il piano gratuito si può eseguire una volta al giorno.
 
+## Testi legali (02/10/2026)
+- Bozze complete in `docs/legale/` (informativa privacy, condizioni farmacie, condizioni privati) e in Word `docs/legale/Magistra_bozze_testi_legali.docx` da mandare al legale/consulente privacy; punti da decidere evidenziati [DA VERIFICARE]. Dopo la validazione si pubblicano da Admin → Condizioni e privacy (nuova versione, senza "provvisorio").
+- Da decidere col legale: contitolarità Sagè/Bioeleva, "nessun reso" vs garanzia per vizi, seconda casella per le clausole vessatorie (artt. 1341-1342 c.c., modifica del portale se serve), costi del recesso privati.
+
 ## Decisioni del 30/09/2026 (Fase 7)
 - **Dominio**: magistraonline.it (registrato su Aruba). Indirizzo del portale **https://www.magistraonline.it**; magistraonline.it senza "www" rimanda lì. Email del portale inviate da **noreply@magistraonline.it**, dominio autenticato con SPF e DKIM. **Servizio email: Brevo** (piano gratuito, 300 email/giorno) per le email del portale (API, `BREVO_API_KEY`) e per conferma iscrizione/recupero password (SMTP di Supabase: smtp-relay.brevo.com:587). Dominio autenticato su Brevo il 01/10/2026 (codice Brevo, DKIM brevo1/brevo2, DMARC unito a quello Aruba con `rua=mailto:rua@dmarc.brevo.com`); SPF e posta Aruba invariati. Risposte dei clienti a `EMAIL_RISPOSTA` = info@salvatoredimarino.it. Prova reale: email ricevuta in posta in arrivo, link funzionante. Delera eventualmente per newsletter/marketing.
 - **Codice su GitHub**: repository privato `dimarittimo-creator/magistra` (dal 30/09/2026). IBAN reali tolti anche dalla cronologia (sostituiti da "IBAN-RIMOSSO"): i test li leggono dal database.
