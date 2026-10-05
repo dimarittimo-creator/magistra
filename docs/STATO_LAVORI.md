@@ -9,7 +9,7 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
 - [x] Fase 5 – Area Privati (B2C) — **completata** e approvata (30/09/2026). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
 - [x] Fase 6 – Chatbot — **completata** e approvata (30/09/2026): test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
-- [ ] Fase 7 – Messa online — **in corso**: online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito, prezzi degli 8 prodotti mancanti, testi legali definitivi; area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
+- [ ] Fase 7 – Messa online — **in corso**: online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito, testi legali definitivi; area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
 
 ## Fase 0 – cosa c'è
 - Next.js + TypeScript + Tailwind con i token colore di `GRAFICA.md` (chiaro e scuro) in `app/globals.css`; caratteri Tinos e Public Sans.
@@ -155,7 +155,8 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 - Il job ogni 15 minuti su Vercel richiede il piano Pro; con il piano gratuito si può eseguire una volta al giorno.
 
 ## Prodotti disattivati (05/10/2026)
-- Su richiesta di Salvatore disattivati online 15 prodotti (registro operazioni): ADEGEN, APSTEROL, ELIVID, FORTIRENE 200, MICROLIT, SEREDOR 10ML, SEREDOR 20CPR, VENOSELLE, SAGEVIT OVER, SAGEVIT, SAGEPA-B, PRIMUS FITO, PRIMUS 10 FLACONCINI, PRIMUS 300 FLACONE, RELAMI. Restano nello storico ordini; l'import del deposito non li riattiva; si riattivano da Admin → Prodotti. Visibili alle farmacie: 24 prodotti.
+- Su richiesta di Salvatore disattivati online 15 prodotti (registro operazioni): ADEGEN, APSTEROL, ELIVID, FORTIRENE 200, MICROLIT, SEREDOR 10ML, SEREDOR 20CPR, VENOSELLE, SAGEVIT OVER, SAGEVIT, SAGEPA-B, PRIMUS FITO, PRIMUS 10 FLACONCINI, PRIMUS 300 FLACONE, RELAMI. Restano nello storico ordini; l'import del deposito non li riattiva; si riattivano da Admin → Prodotti.
+- Disattivati anche gli 8 prodotti senza prezzo (INFANTUSS, NIAGARA, OMEGAREX, REGENERIS, RIPARASE CREMA, RIPARASE PLUS, SPARTA PAPPA REALE, VITABIM), da riattivare quando avranno un prezzo (RIPARASE: lotti senza scadenza nel file del deposito). Catalogo online: 24 prodotti attivi, tutti con prezzo.
 
 ## Richieste di evasione (05/10/2026)
 - Le richieste di evasione (PDF + Excel) non vanno più direttamente a CIENNE ma a **ordini@sagepharma.eu** (email del deposito in Admin → Sedi e depositi; modifica registrata nel registro operazioni). Il deposito di partenza sui documenti resta CIENNE.
