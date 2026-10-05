@@ -134,6 +134,20 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
                 <td className="text-right">{formattaEuro(r.imponibile_cent)}</td>
               </tr>
             ))}
+            {o.omaggi_extra.map((e) => (
+              <tr key={`extra-${e.promozione_id}`}>
+                <td>
+                  <span className="pill pill-ok mr-2">Omaggio</span>
+                  {e.testo}
+                  <div className="text-xs text-muted">Promozione «{e.nome}» · materiale promozionale</div>
+                </td>
+                <td>—</td>
+                <td>—</td>
+                <td className="text-right tabular-nums">{e.quantita}</td>
+                <td colSpan={3} />
+                <td className="text-right">{formattaEuro(0)}</td>
+              </tr>
+            ))}
           </tbody>
           <tfoot>
             <tr>

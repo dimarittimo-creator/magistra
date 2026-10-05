@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { OfferteInCorso } from "@/components/catalogo/OfferteInCorso";
 import { richiediFarmacia } from "@/lib/auth";
+import { caricaCatalogo } from "@/lib/catalogo";
 import { formattaData } from "@/lib/formato";
 import { formattaIndirizzo, indirizzoDi, leggiFarmacia } from "@/lib/farmacie/lettura";
 import { creaClientServer } from "@/lib/supabase/server";
@@ -10,6 +12,9 @@ export default async function AreaFarmacia() {
   const utente = await richiediFarmacia();
   const db = await creaClientServer();
   const farmacia = utente.profilo.farmacia_id ? await leggiFarmacia(db, utente.profilo.farmacia_id) : null;
+
+  // Volantini delle offerte in corso (solo per le farmacie attive: le altre non vedono il catalogo)
+  const offerte = farmacia?.stato === "attiva" ? (await caricaCatalogo(db, { farmaciaId: farmacia.id })).offerte : [];
 
   if (!farmacia) {
     return (
@@ -60,6 +65,8 @@ export default async function AreaFarmacia() {
           </div>
         </section>
       )}
+
+      {offerte.length > 0 && <OfferteInCorso offerte={offerte} />}
 
       <section className="panel p-6 mt-6" aria-labelledby="titolo-dati">
         <div className="flex flex-wrap items-baseline justify-between gap-3">

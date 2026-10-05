@@ -10,7 +10,7 @@ import {
 } from "@/lib/availability";
 import { oggiRoma, type DataISO } from "@/lib/date";
 import { aliquotaProdotto, calcolaPrezzi, scontoPerLotto, type Fascia, type Prezzi, type ScontoLotto } from "@/lib/pricing";
-import { migliorScontoPromo, promoMerce, type Promozione } from "@/lib/promozioni";
+import { migliorScontoPromo, promoExtra, promoMerce, promozioneSiApplica, statoPromozione, type PromoExtra, type Promozione } from "@/lib/promozioni";
 
 // Catalogo per le farmacie: unisce dati del database, stati (lib/availability), prezzi (lib/pricing),
 // listino del gruppo della farmacia e promozioni attive (lib/promozioni).
@@ -38,6 +38,8 @@ export type LottoCatalogo = {
   prezzi: Prezzi | null;
   /** Sconto merce e omaggi validi per questo lotto */
   promoMerce: PromoMerce[];
+  /** Omaggi extra non a magazzino (es. espositore) delle promozioni valide per questo lotto */
+  promoExtra: PromoExtra[];
 };
 
 export type ProdottoCatalogo = {
@@ -62,7 +64,10 @@ export type ProdottoCatalogo = {
   prezzoMigliore: Prezzi | null;
 };
 
-export type Catalogo = { oggi: DataISO; impostazioni: Impostazioni; fasce: Fascia[]; prodotti: ProdottoCatalogo[] };
+/** Offerta in corso con volantino, per la pagina iniziale e le schede prodotto. */
+export type OffertaConVolantino = { id: string; nome: string; immagine_path: string; fine: DataISO; prodotti: string[] };
+
+export type Catalogo = { oggi: DataISO; impostazioni: Impostazioni; fasce: Fascia[]; prodotti: ProdottoCatalogo[]; offerte: OffertaConVolantino[] };
 
 type RigaProdotto = {
   codice: string;
@@ -182,6 +187,7 @@ export async function caricaCatalogo(
         stato,
         sconto,
         prezzi: sconto && prezzo != null ? calcolaPrezzi(prezzo, iva, sconto.sconto) : null,
+        promoExtra: stato === "vendibile" ? promozioni.filter((pr) => promozioneSiApplica(pr, cosa, chi, oggi)).map(promoExtra).filter((x): x is PromoExtra => x !== null) : [],
         promoMerce: stato === "vendibile" ? promoMerce(promozioni, cosa, chi, oggi).map(({ id, nome, tipo, compra, omaggio_quantita, omaggio_prodotto_codice }) => ({ id, nome, tipo, compra, omaggio_quantita, omaggio_prodotto_codice })) : [],
       };
     });
@@ -217,5 +223,19 @@ export async function caricaCatalogo(
     });
   }
 
-  return { oggi, impostazioni, fasce: fasceNum, prodotti: risultato };
+  // Offerte in corso con volantino che valgono per questa farmacia e per almeno un lotto vendibile
+  const offerte: OffertaConVolantino[] = promozioni
+    .filter((p) => p.immagine_path && statoPromozione(p, oggi) === "attiva" && (!p.gruppo_id || p.gruppo_id === gruppoId))
+    .map((p) => ({
+      id: p.id,
+      nome: p.nome,
+      immagine_path: p.immagine_path!,
+      fine: p.fine,
+      prodotti: risultato
+        .filter((x) => x.lotti.some((l) => l.stato === "vendibile" && promozioneSiApplica(p, { prodotto: x.codice, lineaId: x.linea?.id ?? null, lottoId: l.id }, chi, oggi)))
+        .map((x) => x.codice),
+    }))
+    .filter((o) => o.prodotti.length > 0);
+
+  return { oggi, impostazioni, fasce: fasceNum, prodotti: risultato, offerte };
 }

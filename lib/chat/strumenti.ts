@@ -7,7 +7,7 @@ import { cercaKb } from "@/lib/chat/kb";
 import { documentoCorrente } from "@/lib/documenti-legali";
 import { formattaData, formattaEuro } from "@/lib/formato";
 import { ETICHETTE_STATO_ORDINE, type StatoOrdine } from "@/lib/ordini/stati";
-import { descriviPromozione, type Promozione } from "@/lib/promozioni";
+import { descriviOmaggioExtra, descriviPromozione, promoExtra, type Promozione } from "@/lib/promozioni";
 
 // Strumenti dell'assistente per le farmacie (docs/SPECIFICA.md §6).
 // Regola: disponibilità, prezzi, promozioni e ordini arrivano SOLO da qui, cioè dal database,
@@ -128,6 +128,7 @@ function descriviLotto(l: LottoCatalogo) {
     prezzo_farmacia_iva_esclusa: l.prezzi ? formattaEuro(l.prezzi.farmaciaNettoCent) : null,
     prezzo_farmacia_iva_inclusa: l.prezzi ? formattaEuro(l.prezzi.farmaciaIvatoCent) : null,
     promozioni_merce: l.promoMerce.map((p) => `${p.nome}: ${descriviPromozione(p)}`),
+    omaggi_extra: l.promoExtra.map((p) => `${p.nome}: ${descriviOmaggioExtra(p)}`),
   };
 }
 
@@ -187,7 +188,7 @@ export async function eseguiStrumento(nome: string, input: Record<string, unknow
       const perPromo = new Map<string, Set<string>>();
       for (const p of catalogo.prodotti) {
         for (const l of p.lotti.filter((x) => x.stato === "vendibile")) {
-          const ids = [...(l.sconto?.origine === "promozione" && l.sconto.promozioneId ? [l.sconto.promozioneId] : []), ...l.promoMerce.map((m) => m.id)];
+          const ids = [...(l.sconto?.origine === "promozione" && l.sconto.promozioneId ? [l.sconto.promozioneId] : []), ...l.promoMerce.map((m) => m.id), ...l.promoExtra.map((x) => x.id)];
           for (const id of ids) perPromo.set(id, (perPromo.get(id) ?? new Set()).add(p.nome));
         }
       }
@@ -198,6 +199,7 @@ export async function eseguiStrumento(nome: string, input: Record<string, unknow
       const promozioni = ((data ?? []) as Promozione[]).map((p) => ({
         nome: p.nome,
         cosa_prevede: descriviPromozione(p, p.omaggio_prodotto_codice ? nomi.get(p.omaggio_prodotto_codice) : undefined),
+        omaggio_extra: promoExtra(p) ? descriviOmaggioExtra(promoExtra(p)!) : null,
         valida_fino_al: formattaData(p.fine),
         prodotti: [...perPromo.get(p.id)!].slice(0, 15),
       }));

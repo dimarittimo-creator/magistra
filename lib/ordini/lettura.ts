@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { OmaggioExtra } from "@/lib/promozioni";
 import type { StatoOrdine } from "./stati";
 
 // Fotografia salvata nell'ordine al momento dell'invio: i documenti e le email
@@ -103,6 +104,8 @@ export type Ordine = {
   iva_dettaglio: { aliquota: number; imponibileCent: number; ivaCent: number }[];
   spese_spedizione_cent: number;
   totale_cent: number;
+  /** Omaggi extra non a magazzino spettanti (es. espositori), fotografati all'invio */
+  omaggi_extra: OmaggioExtra[];
   creato_il: string;
   righe: RigaOrdine[];
   storico: { id: number; da: StatoOrdine | null; a: StatoOrdine; messaggio: string | null; il: string }[];
@@ -118,6 +121,7 @@ export async function leggiOrdine(db: SupabaseClient, id: string): Promise<Ordin
   if (!data) return null;
   const o = data as unknown as Ordine;
   o.righe = [...o.righe].sort((a, b) => a.posizione - b.posizione).map((r) => ({ ...r, iva: Number(r.iva), sconto_applicato: Number(r.sconto_applicato) }));
+  o.omaggi_extra = o.omaggi_extra ?? [];
   o.storico = [...o.storico].sort((a, b) => a.il.localeCompare(b.il));
   return o;
 }

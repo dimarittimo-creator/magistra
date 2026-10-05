@@ -14,6 +14,7 @@ export function FormPromozione({
   linee,
   lotti,
   gruppi,
+  immagineAttuale,
 }: {
   id: string | null;
   iniziali: Record<string, string>;
@@ -21,6 +22,7 @@ export function FormPromozione({
   linee: Opzione[];
   lotti: Opzione[];
   gruppi: Opzione[];
+  immagineAttuale: string | null;
 }) {
   const [stato, azione] = useActionState<StatoModulo, FormData>(salvaPromozione.bind(null, id), {});
   const v = stato.valori ?? iniziali;
@@ -85,6 +87,37 @@ export function FormPromozione({
         {ambito === "linea" && <Selezione nome="linea_id" etichetta="Linea" opzioni={linee} />}
         {ambito === "lotto" && <Selezione nome="lotto_id" etichetta="Lotto" opzioni={lotti} />}
         <Selezione nome="gruppo_id" etichetta="Per quali farmacie" opzioni={gruppi} vuota="Tutte le farmacie" />
+      </fieldset>
+
+      <fieldset className="space-y-3">
+        <legend className="etichetta">Omaggio extra non a magazzino (facoltativo)</legend>
+        <p className="aiuto -mt-2">
+          Per materiale che non è nel magazzino del portale, per esempio un espositore. Il portale calcola quanti ne spettano e li scrive nel carrello,
+          nell&apos;ordine, nelle email e nella richiesta di evasione al deposito. Lascia vuoto se non serve.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Campo nome="omaggio_extra_testo" etichetta="Cosa si regala" valore={v.omaggio_extra_testo} errore={e.omaggio_extra_testo} maxLength={120}
+            aiuto="Es. espositore da banco Primus Task" />
+          <Campo nome="omaggio_extra_ogni" etichetta="Ogni quanti pezzi acquistati" valore={v.omaggio_extra_ogni} errore={e.omaggio_extra_ogni} inputMode="numeric" />
+          <Campo nome="omaggio_extra_quantita" etichetta="Quanti in omaggio" valore={v.omaggio_extra_quantita} errore={e.omaggio_extra_quantita} inputMode="numeric" />
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-3">
+        <legend className="etichetta">Volantino (facoltativo)</legend>
+        {immagineAttuale && (
+          <div className="flex flex-wrap items-start gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={immagineAttuale} alt="Volantino attuale" className="w-40 rounded border border-line" />
+            <Casella nome="rimuovi_immagine">Togli il volantino</Casella>
+          </div>
+        )}
+        <div>
+          <label htmlFor="p-immagine" className="etichetta">{immagineAttuale ? "Sostituisci con un'altra immagine" : "Carica un'immagine"}</label>
+          <input id="p-immagine" name="immagine" type="file" accept="image/jpeg,image/png,image/webp" className="block" aria-describedby="p-immagine-aiuto" />
+          <p id="p-immagine-aiuto" className="aiuto">JPG, PNG o WebP fino a 5 MB. Le farmacie lo vedono nella pagina iniziale («Offerte in corso») e nella scheda del prodotto, finché la promozione è attiva.</p>
+          {e.immagine && <p className="errore-campo">{e.immagine}</p>}
+        </div>
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-3 items-end">

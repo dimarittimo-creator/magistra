@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { caricaCatalogo, type Catalogo, type LottoCatalogo, type ProdottoCatalogo } from "@/lib/catalogo";
 import { calcolaTotali, type Totali } from "@/lib/pricing";
-import { pezziOmaggio } from "@/lib/promozioni";
+import { calcolaOmaggiExtra, pezziOmaggio, type OmaggioExtra } from "@/lib/promozioni";
 
 export type RigaCarrello = {
   lottoId: string;
@@ -21,6 +21,8 @@ export type RigaCarrello = {
 export type CarrelloVerificato = {
   righe: RigaCarrello[];
   totali: Totali;
+  /** Omaggi extra non a magazzino spettanti (es. espositori) */
+  omaggiExtra: OmaggioExtra[];
   depositoId: string | null;
   problemiGenerali: string[];
   inviabile: boolean;
@@ -128,6 +130,7 @@ export function verificaCarrello(catalogo: Catalogo, salvate: { lotto_id: string
   return {
     righe: tutte,
     totali,
+    omaggiExtra: calcolaOmaggiExtra(valide.map((r) => ({ quantita: r.quantita, promoExtra: r.lotto!.promoExtra }))),
     depositoId: depositi.size === 1 ? [...depositi][0] : null,
     problemiGenerali,
     inviabile: righe.length > 0 && righe.every((r) => r.problemi.length === 0) && problemiGenerali.length === 0,

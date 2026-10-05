@@ -4,6 +4,7 @@ import { StoricoModifiche } from "@/components/admin/StoricoModifiche";
 import { richiediAdmin } from "@/lib/auth";
 import { aggiungiGiorni, oggiRoma } from "@/lib/date";
 import { formattaData } from "@/lib/formato";
+import { urlVolantino } from "@/lib/promozioni";
 import { creaClientServer } from "@/lib/supabase/server";
 import { duplicaPromozione } from "../azioni";
 import { FormPromozione } from "../FormPromozione";
@@ -54,6 +55,7 @@ export default async function PaginaPromozione({ params, searchParams }: { param
           linee={linee ?? []}
           lotti={(lotti ?? []).map((l) => ({ id: l.id, nome: `${(l.prodotto as unknown as { nome: string }).nome} – lotto ${l.codice_lotto}${l.scadenza ? ` (scad. ${formattaData(l.scadenza)})` : ""}` }))}
           gruppi={gruppi ?? []}
+          immagineAttuale={p?.immagine_path ? urlVolantino(p.immagine_path) : null}
         />
       </section>
       {p && <StoricoModifiche tabella="promozioni" recordId={p.id} etichette={{ nome: "Nome", tipo: "Tipo", sconto_percentuale: "Sconto %", compra: "Ogni", omaggio_quantita: "Omaggio", inizio: "Dal", fine: "Al", sospesa: "Sospesa", ambito: "Ambito", gruppo_id: "Gruppo" }} valoriLeggibili={{ gruppo_id: Object.fromEntries((gruppi ?? []).map((g) => [g.id, g.nome])) }} />}

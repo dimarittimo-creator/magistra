@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BadgeSconto, BadgeStatoProdotto } from "@/components/catalogo/Etichette";
+import { OfferteInCorso } from "@/components/catalogo/OfferteInCorso";
 import { richiediFarmaciaAttiva } from "@/lib/auth";
 import { caricaCatalogo } from "@/lib/catalogo";
 import { formattaData, formattaEuro } from "@/lib/formato";
-import { descriviPromozione } from "@/lib/promozioni";
+import { descriviOmaggioExtra, descriviPromozione } from "@/lib/promozioni";
 import { creaClientServer } from "@/lib/supabase/server";
 import { AggiungiLotto } from "./AggiungiLotto";
 
@@ -26,6 +27,7 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
   if (!p) notFound();
 
   const ivaTesto = `${p.iva.toLocaleString("it-IT")}%`;
+  const extra = [...new Map(p.lotti.flatMap((l) => l.promoExtra.map((x) => [x.id, x]))).values()];
   const promo = [...new Map(p.lotti.flatMap((l) => l.promoMerce.map((m) => [m.id, { ...m, lotti: p.lotti.filter((x) => x.promoMerce.some((y) => y.id === m.id)).length }]))).values()];
 
   return (
@@ -71,7 +73,7 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
         {p.descrizione && <p className="sm:col-span-4">{p.descrizione}</p>}
       </section>
 
-      {promo.length > 0 && (
+      {(promo.length > 0 || extra.length > 0) && (
         <section className="avviso avviso-ok" aria-label="Promozioni in corso">
           {promo.map((m) => (
             <p key={m.id}>
@@ -80,8 +82,15 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
               {m.lotti < p.lotti.length && " (solo su alcuni lotti)"}.
             </p>
           ))}
+          {extra.map((x) => (
+            <p key={`extra-${x.id}`}>
+              <span className="pill pill-ok mr-2">Omaggio</span>
+              <strong>{x.nome}</strong>: {descriviOmaggioExtra(x)} (anche sommando lotti diversi).
+            </p>
+          ))}
         </section>
       )}
+      <OfferteInCorso offerte={catalogo.offerte} titolo="Volantino dell'offerta" collegaProdotto={false} />
       {p.prezzoDiGruppo && <p className="avviso avviso-info">Prezzo al pubblico del listino riservato al tuo gruppo.</p>}
 
       {p.stato === "mancante_temporaneamente" && (

@@ -167,6 +167,23 @@ function Righe({ o }: { o: Ordine }) {
           <Text style={col.imponibile}>{formattaEuro(privato ? r.prezzo_farmacia_ivato_cent * r.quantita : r.imponibile_cent)}</Text>
         </View>
       ))}
+      {o.omaggi_extra.map((e) => (
+        <View key={`extra-${e.promozione_id}`} style={s.riga} wrap={false}>
+          <View style={col.prodotto}>
+            <Text>{e.testo}</Text>
+            <Text style={{ color: GRIGIO, fontSize: 7 }}>Omaggio – promozione «{e.nome}»</Text>
+          </View>
+          <Text style={col.lotto}>—</Text>
+          <Text style={col.scad}>—</Text>
+          <Text style={col.qta}></Text>
+          <Text style={col.omaggio}>{e.quantita}</Text>
+          <Text style={col.pubblico}></Text>
+          <Text style={col.sconto}></Text>
+          <Text style={col.prezzo}></Text>
+          <Text style={col.iva}></Text>
+          <Text style={col.imponibile}>{formattaEuro(0)}</Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -288,7 +305,7 @@ function RiepilogoOrdine({ o, condizioni }: { o: Ordine; condizioni: Condizioni 
 function DdtSimulato({ o, partenza, condizioni }: { o: Ordine; partenza: LuogoPartenza; condizioni: Condizioni | null }) {
   const c = o.snapshot_cliente;
   const soc = o.snapshot_societa;
-  const colli = o.righe.reduce((n, r) => n + r.quantita + r.quantita_omaggio, 0);
+  const colli = o.righe.reduce((n, r) => n + r.quantita + r.quantita_omaggio, 0) + o.omaggi_extra.reduce((n, e) => n + e.quantita, 0);
   return (
     <Document title={`DDT simulato ${o.numero}`} author={soc.ragione_sociale} creator="Magistra">
       <Page size="A4" style={s.pagina}>
@@ -405,6 +422,10 @@ export async function excelOrdine(o: Ordine, condizioni: Condizioni | null): Pro
       r.imponibile_cent / 100,
     ]);
     for (const n of [6, 8, 10]) riga.getCell(n).numFmt = euro;
+  }
+  for (const e of o.omaggi_extra) {
+    const riga = ws.addRow([`Omaggio: ${e.testo} (promozione «${e.nome}»)`, null, null, null, e.quantita, null, null, null, null, 0]);
+    riga.getCell(10).numFmt = euro;
   }
   ws.addRow([]);
   const totale = (etichetta: string, cent: number, grassetto = false) => {

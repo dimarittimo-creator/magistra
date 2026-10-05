@@ -22,6 +22,12 @@ export type Promozione = {
   inizio: DataISO;
   fine: DataISO;
   sospesa: boolean;
+  /** Volantino (percorso nell'archivio "promozioni") */
+  immagine_path?: string | null;
+  /** Omaggio extra non a magazzino, es. "espositore Primus Task": ogni `omaggio_extra_ogni` pezzi, `omaggio_extra_quantita` */
+  omaggio_extra_testo?: string | null;
+  omaggio_extra_ogni?: number | null;
+  omaggio_extra_quantita?: number | null;
 };
 
 export type StatoPromozione = "programmata" | "attiva" | "conclusa" | "sospesa";
@@ -79,4 +85,41 @@ export function descriviPromozione(
   if (p.tipo === "sconto_percentuale") return `sconto ${Number(p.sconto_percentuale).toLocaleString("it-IT")}%`;
   if (p.tipo === "sconto_merce") return `${p.compra}+${p.omaggio_quantita}: ogni ${p.compra} pezzi, ${p.omaggio_quantita} in omaggio`;
   return `ogni ${p.compra} pezzi, ${p.omaggio_quantita} ${nomeOmaggio ?? "pezzi"} in omaggio`;
+}
+
+export type PromoExtra = { id: string; nome: string; testo: string; ogni: number; quantita: number };
+export type OmaggioExtra = { promozione_id: string; nome: string; testo: string; quantita: number };
+
+/** Dati dell'omaggio extra di una promozione, se ce l'ha. */
+export function promoExtra(p: Promozione): PromoExtra | null {
+  if (!p.omaggio_extra_testo || !p.omaggio_extra_ogni || !p.omaggio_extra_quantita) return null;
+  return { id: p.id, nome: p.nome, testo: p.omaggio_extra_testo, ogni: p.omaggio_extra_ogni, quantita: p.omaggio_extra_quantita };
+}
+
+/**
+ * Omaggi extra spettanti (es. 1 espositore ogni 24 pezzi): i pezzi acquistati si sommano su tutte le righe
+ * a cui la promozione si applica, anche su lotti diversi. Gli omaggi extra non impegnano giacenza.
+ */
+export function calcolaOmaggiExtra(righe: { quantita: number; promoExtra: PromoExtra[] }[]): OmaggioExtra[] {
+  const perPromo = new Map<string, { promo: PromoExtra; pezzi: number }>();
+  for (const r of righe) {
+    for (const p of r.promoExtra) {
+      const voce = perPromo.get(p.id) ?? { promo: p, pezzi: 0 };
+      voce.pezzi += r.quantita;
+      perPromo.set(p.id, voce);
+    }
+  }
+  return [...perPromo.values()]
+    .map(({ promo, pezzi }) => ({ promozione_id: promo.id, nome: promo.nome, testo: promo.testo, quantita: Math.floor(pezzi / promo.ogni) * promo.quantita }))
+    .filter((o) => o.quantita > 0);
+}
+
+/** Indirizzo pubblico del volantino (archivio "promozioni" di Supabase Storage). */
+export function urlVolantino(percorso: string): string {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/promozioni/${percorso}`;
+}
+
+/** Descrizione per le farmacie: "1 espositore Primus Task ogni 24 pezzi". */
+export function descriviOmaggioExtra(p: Pick<PromoExtra, "testo" | "ogni" | "quantita">): string {
+  return `${p.quantita} ${p.testo} in omaggio ogni ${p.ogni} pezzi`;
 }

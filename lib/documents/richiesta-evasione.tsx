@@ -13,7 +13,7 @@ export type DatiDeposito = {
   operatore: string | null;
 };
 
-type Riga = { minsan: string; descrizione: string; lotto: string; scadenza: string; quantita: number; causale: "Vendita" | "Omaggio / sconto merce"; prezzo: number | null };
+type Riga = { minsan: string; descrizione: string; lotto: string; scadenza: string; quantita: number; causale: "Vendita" | "Omaggio / sconto merce" | "Omaggio (materiale promozionale)"; prezzo: number | null };
 
 function righe(o: Ordine, conPrezzi: boolean): Riga[] {
   const out: Riga[] = [];
@@ -21,6 +21,10 @@ function righe(o: Ordine, conPrezzi: boolean): Riga[] {
     const base = { minsan: r.prodotto_codice, descrizione: r.prodotto_nome, lotto: r.codice_lotto, scadenza: formattaData(r.scadenza) };
     if (r.quantita > 0) out.push({ ...base, quantita: r.quantita, causale: "Vendita", prezzo: conPrezzi ? r.prezzo_farmacia_netto_cent : null });
     if (r.quantita_omaggio > 0) out.push({ ...base, quantita: r.quantita_omaggio, causale: "Omaggio / sconto merce", prezzo: conPrezzi ? 0 : null });
+  }
+  // Omaggi extra non a magazzino (es. espositori): senza codice né lotto, il deposito li aggiunge alla spedizione
+  for (const e of o.omaggi_extra) {
+    out.push({ minsan: "—", descrizione: e.testo, lotto: "—", scadenza: "—", quantita: e.quantita, causale: "Omaggio (materiale promozionale)", prezzo: conPrezzi ? 0 : null });
   }
   return out;
 }

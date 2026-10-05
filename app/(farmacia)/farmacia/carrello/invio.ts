@@ -180,6 +180,12 @@ export async function inviaPrenotazione(_prima: StatoInvio, fd: FormData): Promi
   }
   if (esito.esito !== "ok") return { messaggio: "La tua iscrizione non risulta attiva: contatta l'amministrazione." };
 
+  // Omaggi extra non a magazzino (es. espositori): fotografia di quelli spettanti al momento dell'invio
+  if (carrello.omaggiExtra.length) {
+    const { error: errExtra } = await admin.from("ordini").update({ omaggi_extra: carrello.omaggiExtra }).eq("id", esito.ordine_id);
+    if (errExtra) console.error("[ordine] omaggi extra non salvati:", errExtra.message);
+  }
+
   // Email di conferma ricezione alla farmacia e avviso all'amministrazione
   const ordine = await leggiOrdine(admin, esito.ordine_id);
   if (ordine) {

@@ -7,6 +7,7 @@ import { caricaCatalogo } from "@/lib/catalogo";
 import { aggiungiGiorni } from "@/lib/date";
 import { documentoCorrente } from "@/lib/documenti-legali";
 import { formattaData, formattaEuro } from "@/lib/formato";
+import { descriviOmaggioExtra } from "@/lib/promozioni";
 import { creaClientServer } from "@/lib/supabase/server";
 import { formattaIban, ibanValido } from "@/lib/validazione";
 import { svuotaCarrello } from "./azioni";
@@ -124,6 +125,9 @@ export default async function Carrello() {
                     </p>
                   )}
                   {r.quantitaOmaggio > 0 && <p className="text-sm text-slate font-semibold">+ {r.quantitaOmaggio} pezzi in omaggio (sconto merce)</p>}
+                  {r.lotto?.promoExtra.map((p) => (
+                    <p key={p.id} className="text-sm text-slate">Promozione «{p.nome}»: {descriviOmaggioExtra(p)}</p>
+                  ))}
                   {r.avvisi.map((a) => (
                     <p key={a} className="text-sm text-amber font-semibold">{a}</p>
                   ))}
@@ -147,6 +151,20 @@ export default async function Carrello() {
               </li>
             ),
           )}
+          {carrello.omaggiExtra.map((o) => (
+            <li key={`extra-${o.promozione_id}`} className="py-4 grid gap-3 md:grid-cols-[2fr_1fr_auto_auto] md:items-center bg-slate-soft rounded-lg px-3">
+              <div>
+                <p className="font-semibold">
+                  <span className="pill pill-ok mr-2">Omaggio</span>
+                  {o.testo}
+                </p>
+                <p className="text-sm text-muted">Promozione «{o.nome}» · materiale promozionale spedito con l&apos;ordine</p>
+              </div>
+              <div />
+              <p className="text-sm font-semibold">{o.quantita} pz</p>
+              <p className="text-right font-semibold md:w-28">0,00 €</p>
+            </li>
+          ))}
         </ul>
       </section>
 

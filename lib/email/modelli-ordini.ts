@@ -19,19 +19,28 @@ function tabellaRighe(o: Ordine): Blocco {
         `<td style="${cellaDx}">${formattaEuro(r.prezzo_farmacia_netto_cent)}</td><td style="${cellaDx}">${formattaEuro(r.imponibile_cent)}</td></tr>`,
     )
     .join("");
+  // Omaggi extra non a magazzino (es. espositori)
+  const extra = o.omaggi_extra
+    .map(
+      (e) =>
+        `<tr><td style="${cella}">Omaggio: ${esc(e.testo)}<br /><span style="color:#5a6a70;font-size:12px">Promozione «${esc(e.nome)}» · materiale promozionale</span></td>` +
+        `<td style="${cellaDx}">${e.quantita}</td><td style="${cellaDx}"></td><td style="${cellaDx}"></td><td style="${cellaDx}">${formattaEuro(0)}</td></tr>`,
+    )
+    .join("");
   const iva = o.iva_dettaglio
     .map((d) => `<tr><td colspan="4" style="${cellaDx}">IVA ${d.aliquota.toLocaleString("it-IT")}% su ${formattaEuro(d.imponibileCent)}</td><td style="${cellaDx}">${formattaEuro(d.ivaCent)}</td></tr>`)
     .join("");
   const html =
     `<table style="width:100%;border-collapse:collapse;margin:0 0 18px"><thead><tr>` +
     `<th style="${cella}">Prodotto</th><th style="${cellaDx}">Q.tà</th><th style="${cellaDx}">Sconto</th><th style="${cellaDx}">Prezzo IVA escl.</th><th style="${cellaDx}">Imponibile</th>` +
-    `</tr></thead><tbody>${righe}` +
+    `</tr></thead><tbody>${righe}${extra}` +
     `<tr><td colspan="4" style="${cellaDx}"><strong>Imponibile</strong></td><td style="${cellaDx}"><strong>${formattaEuro(o.imponibile_cent)}</strong></td></tr>` +
     iva +
     `<tr><td colspan="4" style="${cellaDx}"><strong>Totale</strong></td><td style="${cellaDx}"><strong>${formattaEuro(o.totale_cent)}</strong></td></tr>` +
     `</tbody></table>`;
   const testo = [
     ...o.righe.map((r) => `- ${r.prodotto_nome} (lotto ${r.codice_lotto}, scad. ${formattaData(r.scadenza)}): ${r.quantita} × ${formattaEuro(r.prezzo_farmacia_netto_cent)} = ${formattaEuro(r.imponibile_cent)}`),
+    ...o.omaggi_extra.map((e) => `- Omaggio: ${e.quantita} × ${e.testo} (promozione «${e.nome}»)`),
     `Imponibile ${formattaEuro(o.imponibile_cent)} · IVA ${formattaEuro(o.iva_cent)} · Totale ${formattaEuro(o.totale_cent)}`,
   ].join("\n");
   return { html, testo };

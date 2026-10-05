@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { scontoPerLotto, type Fascia } from "@/lib/pricing";
-import { descriviPromozione, migliorScontoPromo, pezziOmaggio, promozioneSiApplica, statoPromozione, type Promozione } from "@/lib/promozioni";
+import { calcolaOmaggiExtra, descriviOmaggioExtra, descriviPromozione, migliorScontoPromo, pezziOmaggio, promoExtra, promozioneSiApplica, statoPromozione, type Promozione } from "@/lib/promozioni";
 
 const OGGI = "2026-10-15";
 const fasce: Fascia[] = [
@@ -49,5 +49,27 @@ describe("Promozioni", () => {
     expect(pezziOmaggio(merce, 10)).toBe(2);
     expect(pezziOmaggio(merce, 25)).toBe(4);
     expect(descriviPromozione({ tipo: "sconto_merce", ...merce })).toBe("10+2: ogni 10 pezzi, 2 in omaggio");
+  });
+});
+
+describe("omaggi extra non a magazzino (es. espositore)", () => {
+  const espositore = { id: "p1", nome: "Primus Task ottobre", testo: "espositore da banco Primus Task", ogni: 24, quantita: 1 };
+
+  it("1 ogni 24 pezzi, sommando lotti diversi", () => {
+    expect(calcolaOmaggiExtra([{ quantita: 10, promoExtra: [espositore] }, { quantita: 14, promoExtra: [espositore] }])).toEqual([
+      { promozione_id: "p1", nome: "Primus Task ottobre", testo: "espositore da banco Primus Task", quantita: 1 },
+    ]);
+    expect(calcolaOmaggiExtra([{ quantita: 50, promoExtra: [espositore] }])[0].quantita).toBe(2);
+  });
+
+  it("sotto la soglia non spetta nulla; le righe senza promozione non contano", () => {
+    expect(calcolaOmaggiExtra([{ quantita: 23, promoExtra: [espositore] }, { quantita: 100, promoExtra: [] }])).toEqual([]);
+  });
+
+  it("si ricava dalla promozione solo se i tre campi ci sono, e si descrive in italiano", () => {
+    const promo = { id: "p1", nome: "X", tipo: "sconto_percentuale", sconto_percentuale: 42, compra: null, omaggio_quantita: null, omaggio_prodotto_codice: null, ambito: "prodotto", prodotto_codice: "1", lotto_id: null, linea_id: null, gruppo_id: null, inizio: "2026-10-05", fine: "2026-10-15", sospesa: false } as const;
+    expect(promoExtra({ ...promo })).toBeNull();
+    expect(promoExtra({ ...promo, omaggio_extra_testo: "espositore", omaggio_extra_ogni: 24, omaggio_extra_quantita: 1 })).toEqual({ id: "p1", nome: "X", testo: "espositore", ogni: 24, quantita: 1 });
+    expect(descriviOmaggioExtra(espositore)).toBe("1 espositore da banco Primus Task in omaggio ogni 24 pezzi");
   });
 });
