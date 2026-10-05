@@ -154,6 +154,10 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 ### Da sapere per la messa online
 - Il job ogni 15 minuti su Vercel richiede il piano Pro; con il piano gratuito si può eseguire una volta al giorno.
 
+## Promozioni con volantino ed espositore (05/10/2026)
+- Nuove funzioni: **volantino** sulle promozioni (le farmacie lo vedono in «Offerte in corso» e nella scheda prodotto) e **omaggio extra non a magazzino** (es. 1 espositore ogni 24 pezzi), riportato in carrello, ordine, email, PDF/Excel e richiesta di evasione a CIENNE. Admin → Promozioni: campi «Cosa si regala / Ogni quanti pezzi / Quanti in omaggio» e «Volantino».
+- **Online**: offerta «Primus Task: −42% + espositore in omaggio» su PRIMUS TASK 10 STICKPACK (988258784), dal 05/10 al 15/10/2026, tutte le farmacie: 12,65 € + IVA a confezione, 1 espositore da banco ogni 24 pezzi. Volantino in Desktop\Magistra - offerte. **Avvisare CIENNE** che gli espositori arrivano come righe «Omaggio (materiale promozionale)» nelle richieste di evasione e verificare che li abbiano a magazzino.
+
 ## Testi legali (02/10/2026)
 - Bozze complete in `docs/legale/` (informativa privacy, condizioni farmacie, condizioni privati) e in Word `docs/legale/Magistra_bozze_testi_legali.docx` da mandare al legale/consulente privacy; punti da decidere evidenziati [DA VERIFICARE]. Dopo la validazione si pubblicano da Admin → Condizioni e privacy (nuova versione, senza "provvisorio").
 - Da decidere col legale: contitolarità Sagè/Bioeleva, "nessun reso" vs garanzia per vizi, seconda casella per le clausole vessatorie (artt. 1341-1342 c.c., modifica del portale se serve), costi del recesso privati.
