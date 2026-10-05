@@ -154,6 +154,9 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 ### Da sapere per la messa online
 - Il job ogni 15 minuti su Vercel richiede il piano Pro; con il piano gratuito si può eseguire una volta al giorno.
 
+## Prodotti disattivati (05/10/2026)
+- Su richiesta di Salvatore disattivati online 15 prodotti (registro operazioni): ADEGEN, APSTEROL, ELIVID, FORTIRENE 200, MICROLIT, SEREDOR 10ML, SEREDOR 20CPR, VENOSELLE, SAGEVIT OVER, SAGEVIT, SAGEPA-B, PRIMUS FITO, PRIMUS 10 FLACONCINI, PRIMUS 300 FLACONE, RELAMI. Restano nello storico ordini; l'import del deposito non li riattiva; si riattivano da Admin → Prodotti. Visibili alle farmacie: 24 prodotti.
+
 ## Richieste di evasione (05/10/2026)
 - Le richieste di evasione (PDF + Excel) non vanno più direttamente a CIENNE ma a **ordini@sagepharma.eu** (email del deposito in Admin → Sedi e depositi; modifica registrata nel registro operazioni). Il deposito di partenza sui documenti resta CIENNE.
 
