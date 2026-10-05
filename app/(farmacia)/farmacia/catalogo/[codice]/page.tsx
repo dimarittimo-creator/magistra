@@ -113,11 +113,11 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
                     <th>Lotto</th>
                     <th>Scadenza</th>
                     <th className="text-right">Disponibili</th>
-                    <th>Sconto</th>
+                    <th>Sconto sul<br />pubblico</th>
                     <th className="text-right">Pubblico<br />IVA incl.</th>
                     <th className="text-right">Pubblico<br />IVA escl.</th>
                     <th className="text-right">Farmacia<br />IVA incl.</th>
-                    <th className="text-right">Farmacia<br />IVA escl.</th>
+                    <th className="text-right">Prezzo farmacia<br />+ IVA</th>
                     <th>Quantità</th>
                   </tr>
                 </thead>
@@ -163,7 +163,7 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
                       <dt className="text-muted">Pubblico IVA incl.</dt><dd className="text-right">{formattaEuro(l.prezzi.pubblicoIvatoCent)}</dd>
                       <dt className="text-muted">Pubblico IVA escl.</dt><dd className="text-right">{formattaEuro(l.prezzi.pubblicoNettoCent)}</dd>
                       <dt className="text-muted">Farmacia IVA incl.</dt><dd className="text-right">{formattaEuro(l.prezzi.farmaciaIvatoCent)}</dd>
-                      <dt className="font-semibold">Farmacia IVA escl.</dt><dd className="text-right font-bold text-base">{formattaEuro(l.prezzi.farmaciaNettoCent)}</dd>
+                      <dt className="font-semibold">Prezzo farmacia + IVA</dt><dd className="text-right font-bold text-base">{formattaEuro(l.prezzi.farmaciaNettoCent)}</dd>
                     </dl>
                   )}
                   {l.stato === "vendibile" ? (

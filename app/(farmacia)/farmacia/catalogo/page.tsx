@@ -1,11 +1,60 @@
 import Link from "next/link";
 import { BadgeStatoProdotto } from "@/components/catalogo/Etichette";
 import { richiediFarmaciaAttiva } from "@/lib/auth";
-import { caricaCatalogo } from "@/lib/catalogo";
+import { caricaCatalogo, type ProdottoCatalogo } from "@/lib/catalogo";
 import { formattaEuro } from "@/lib/formato";
 import { creaClientServer } from "@/lib/supabase/server";
 
 export const metadata = { title: "Catalogo" };
+
+/**
+ * Prezzi del riquadro, come sul volantino: prezzo al pubblico, sconto sul pubblico, prezzo farmacia + IVA.
+ * Con lotti a sconti diversi si mostra il migliore ("fino al", "da"); i prezzi arrivano da lib/pricing via catalogo.
+ */
+function PrezziScheda({ prodotto: p }: { prodotto: ProdottoCatalogo }) {
+  const vendibili = p.lotti.filter((l) => l.stato === "vendibile" && l.prezzi && l.sconto);
+  const migliore = vendibili.reduce<(typeof vendibili)[number] | null>((m, l) => (!m || l.prezzi!.farmaciaNettoCent < m.prezzi!.farmaciaNettoCent ? l : m), null);
+  const variabile = new Set(vendibili.map((l) => l.sconto!.sconto)).size > 1;
+  const pezzi = (
+    <p className="text-sm text-muted">
+      Disponibili <span className="font-semibold text-ink tabular-nums">{p.disponibile.toLocaleString("it-IT")}</span> pz
+    </p>
+  );
+  if (!migliore) {
+    return (
+      <div className="mt-auto space-y-1">
+        <p className="text-sm">
+          Prezzo al pubblico <span className="font-semibold">{formattaEuro(p.prezzo_pubblico_cent!)}</span>
+        </p>
+        {pezzi}
+      </div>
+    );
+  }
+  return (
+    <div className="mt-auto space-y-2">
+      <div className="flex items-baseline justify-between gap-3 border-b border-line pb-1">
+        <span className="text-sm text-muted">Prezzo al pubblico</span>
+        <span className="font-semibold tabular-nums">{formattaEuro(p.prezzo_pubblico_cent!)}</span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-muted">Sconto sul pubblico</span>
+        <span className="pill pill-bad text-sm">
+          {variabile ? "fino al " : ""}−{migliore.sconto!.sconto.toLocaleString("it-IT")}%
+          {migliore.sconto!.origine === "promozione" ? " promo" : ""}
+        </span>
+      </div>
+      <div className="rounded-lg bg-brand text-brand-ink px-3 py-2">
+        <p className="text-xs font-semibold tracking-wide">PREZZO FARMACIA{variabile ? " DA" : ""}</p>
+        <p>
+          <span className="text-2xl font-bold tabular-nums">{formattaEuro(migliore.prezzi!.farmaciaNettoCent)}</span>
+          <span className="text-sm font-semibold"> + IVA {p.iva.toLocaleString("it-IT")}%</span>
+        </p>
+        <p className="text-xs">a confezione · IVA inclusa {formattaEuro(migliore.prezzi!.farmaciaIvatoCent)}</p>
+      </div>
+      {pezzi}
+    </div>
+  );
+}
 
 function normalizza(t: string) {
   return t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -42,7 +91,7 @@ export default async function Catalogo({
           <span className="filetto" aria-hidden="true" />
         </h1>
         <p className="mt-3 text-muted">
-          Prezzi farmacia IVA esclusa, calcolati sulla scadenza di ogni lotto. Apri un prodotto per scegliere lotto e quantità.
+          Per ogni prodotto: prezzo al pubblico, sconto sul prezzo al pubblico e prezzo farmacia (IVA da aggiungere). Lo sconto dipende dalla scadenza del lotto e dalle promozioni: apri un prodotto per scegliere lotto e quantità.
         </p>
       </header>
 
@@ -97,23 +146,7 @@ export default async function Catalogo({
                   Minsan {p.codice}
                   {p.linea && ` · ${p.linea.nome}`}
                 </p>
-                <div className="mt-auto flex items-end justify-between gap-3">
-                  <div>
-                    {p.prezzoMigliore ? (
-                      <>
-                        <p className="text-xs text-muted">da</p>
-                        <p className="text-xl font-bold">{formattaEuro(p.prezzoMigliore.farmaciaNettoCent)}</p>
-                        <p className="text-xs text-muted">IVA esclusa · al pubblico {formattaEuro(p.prezzo_pubblico_cent!)}</p>
-                      </>
-                    ) : (
-                      <p className="text-sm text-muted">Al pubblico {formattaEuro(p.prezzo_pubblico_cent!)}</p>
-                    )}
-                  </div>
-                  <p className="text-sm text-right">
-                    <span className="font-semibold tabular-nums">{p.disponibile.toLocaleString("it-IT")}</span>
-                    <span className="text-muted"> pz</span>
-                  </p>
-                </div>
+                <PrezziScheda prodotto={p} />
               </Link>
             </li>
           ))}
