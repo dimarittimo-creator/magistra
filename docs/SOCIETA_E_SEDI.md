@@ -48,7 +48,7 @@ Sedi iniziali:
 | Sagè Pharma | deposito | Deposito CIENNE (predefinito) – gestito da NEW CIENNE DISTRIBUZIONE S.R.L. | Via Salvatore Piccolo, 211 – 80014 ASI Napoli (NA) |
 | Bioeleva | legale | Sede legale Bioeleva | Viale Antonio Gramsci, 21 – 80122 Napoli (NA) |
 
-Decisione del 29/09/2026: **la merce parte da CIENNE** (sede operativa di Via Salvatore Piccolo 211, ASI Napoli). Via Guantai ad Orsolone è un'unità operativa amministrativa: **non** è un luogo di partenza della merce e non compare sui DDT né nelle richieste di evasione. Le richieste di evasione vanno all'email di CIENNE (`sedi.email` = a.nuzzo@ciennegroup.it), telefono 081 18902097.
+Decisione del 29/09/2026: **la merce parte da CIENNE** (sede operativa di Via Salvatore Piccolo 211, ASI Napoli). Via Guantai ad Orsolone è un'unità operativa amministrativa: **non** è un luogo di partenza della merce e non compare sui DDT né nelle richieste di evasione. Le richieste di evasione vanno a **ordini@sagepharma.eu** (`sedi.email` del deposito, decisione di Salvatore del 05/10/2026; fino ad allora andavano a CIENNE, a.nuzzo@ciennegroup.it). Telefono CIENNE 081 18902097.
 
 Regole:
 - Un deposito appartiene a una società ma **può spedire per entrambe**. Bioeleva non ha un deposito proprio (in visura risulta attività "senza deposito"): quando fattura Bioeleva la merce parte dal deposito scelto, di default il deposito CIENNE.
@@ -72,7 +72,7 @@ Dati forniti da Salvatore Di Marino il 29/09/2026. Tabella `operatori_logistici`
 | Partita IVA / Codice fiscale | 10664671210 |
 | Sede legale | Centro Direzionale, Isola G1, Scala D, Int. 21 – 80143 Napoli (NA) |
 | Sede operativa | Via Salvatore Piccolo, 211 – 80014 ASI Napoli (NA) |
-| Email (destinatario richieste di evasione) | a.nuzzo@ciennegroup.it |
+| Email | a.nuzzo@ciennegroup.it (dal 05/10/2026 le richieste di evasione vanno invece a ordini@sagepharma.eu) |
 | PEC | newciennedistribuzione@pec.it |
 | Telefono | 081 18902097 |
 | Cellulare | 320 2171312 |

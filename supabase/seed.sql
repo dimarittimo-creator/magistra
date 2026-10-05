@@ -40,7 +40,7 @@ from (values
   ('sage', 'legale', 'Sede legale Sagè Pharma', 'Viale Antonio Gramsci, 21', '80122', 'Napoli', 'NA', null, null, false, null),
   ('sage', 'operativa', 'Unità operativa amministrativa Guantai ad Orsolone', 'Via Comunale Guantai ad Orsolone, 40/B', '80131', 'Napoli', 'NA', null, null, false,
    'Unità locale NA/5, aperta l''11/07/2024. Non è luogo di partenza della merce.'),
-  ('sage', 'deposito', 'Deposito CIENNE', 'Via Salvatore Piccolo, 211', '80014', 'ASI Napoli', 'NA', '081 18902097', 'a.nuzzo@ciennegroup.it', true,
+  ('sage', 'deposito', 'Deposito CIENNE', 'Via Salvatore Piccolo, 211', '80014', 'ASI Napoli', 'NA', '081 18902097', 'ordini@sagepharma.eu', true,
    'Gestito da NEW CIENNE DISTRIBUZIONE S.R.L. Spedisce per Sagè Pharma e Bioeleva.'),
   ('bioeleva', 'legale', 'Sede legale Bioeleva', 'Viale Antonio Gramsci, 21', '80122', 'Napoli', 'NA', null, null, false, null)
 ) as v(codice_societa, tipo, nome, indirizzo, cap, citta, provincia, telefono, email, predefinito, note)

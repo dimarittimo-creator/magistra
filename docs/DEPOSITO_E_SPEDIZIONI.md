@@ -1,6 +1,6 @@
 # Deposito e spedizioni
 
-Decisione del 28/09/2026: **si parte via email**. Vale per gli ordini delle farmacie e dei privati, per entrambe le società (Sagè Pharma e Bioeleva). Depositi e indirizzi email sono nella tabella `sedi` (vedi `SOCIETA_E_SEDI.md`). La merce parte dal deposito **NEW CIENNE DISTRIBUZIONE S.R.L.**, Via Salvatore Piccolo 211 – 80014 ASI Napoli (luogo di partenza su DDT simulato e richiesta di evasione); le richieste di evasione vanno a a.nuzzo@ciennegroup.it (dati completi in `SOCIETA_E_SEDI.md` §4). L'accesso diretto del deposito (ruolo `deposito`) va predisposto nel database e nei permessi, ma non attivato.
+Decisione del 28/09/2026: **si parte via email**. Vale per gli ordini delle farmacie e dei privati, per entrambe le società (Sagè Pharma e Bioeleva). Depositi e indirizzi email sono nella tabella `sedi` (vedi `SOCIETA_E_SEDI.md`). La merce parte dal deposito **NEW CIENNE DISTRIBUZIONE S.R.L.**, Via Salvatore Piccolo 211 – 80014 ASI Napoli (luogo di partenza su DDT simulato e richiesta di evasione); le richieste di evasione vanno a **ordini@sagepharma.eu** (decisione del 05/10/2026; prima andavano a CIENNE, a.nuzzo@ciennegroup.it). L'accesso diretto del deposito (ruolo `deposito`) va predisposto nel database e nei permessi, ma non attivato.
 
 ## Stati dell'ordine
 
