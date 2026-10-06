@@ -106,6 +106,8 @@ export type Ordine = {
   totale_cent: number;
   /** Omaggi extra non a magazzino spettanti (es. espositori), fotografati all'invio */
   omaggi_extra: OmaggioExtra[];
+  /** La farmacia ha accettato espressamente lotti con durata residua inferiore a quella garantita (condizioni art. 7.1) */
+  durata_ridotta_accettata: boolean;
   creato_il: string;
   righe: RigaOrdine[];
   storico: { id: number; da: StatoOrdine | null; a: StatoOrdine; messaggio: string | null; il: string }[];

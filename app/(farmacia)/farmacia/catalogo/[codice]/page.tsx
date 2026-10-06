@@ -125,7 +125,10 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
                   {p.lotti.map((l) => (
                     <tr key={l.id}>
                       <td className="font-semibold">{l.codice_lotto}</td>
-                      <td>{l.scadenza ? formattaData(l.scadenza) : "—"}</td>
+                      <td>
+                        {l.scadenza ? formattaData(l.scadenza) : "—"}
+                        {l.durataRidotta && <span className="block text-xs text-amber font-semibold">sotto i {catalogo.impostazioni.mesi_durata_residua_garantita} mesi</span>}
+                      </td>
                       <td className="text-right tabular-nums">{l.disponibile.toLocaleString("it-IT")}</td>
                       <td>{l.sconto ? <BadgeSconto sconto={l.sconto} /> : "—"}</td>
                       <td className="text-right">{l.prezzi ? formattaEuro(l.prezzi.pubblicoIvatoCent) : "—"}</td>
@@ -155,6 +158,7 @@ export default async function SchedaProdotto({ params }: { params: Promise<{ cod
                       <p className="text-sm text-muted">
                         Scadenza {l.scadenza ? formattaData(l.scadenza) : "—"} · {l.disponibile.toLocaleString("it-IT")} pz
                       </p>
+                      {l.durataRidotta && <span className="block text-xs text-amber font-semibold">sotto i {catalogo.impostazioni.mesi_durata_residua_garantita} mesi</span>}
                     </div>
                     {l.sconto && <BadgeSconto sconto={l.sconto} />}
                   </div>

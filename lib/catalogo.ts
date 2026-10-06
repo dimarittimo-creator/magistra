@@ -5,6 +5,7 @@ import {
   lottoVisibile,
   statoLotto,
   statoProdotto,
+  sottoDurataGarantita,
   type StatoLotto,
   type StatoProdotto,
 } from "@/lib/availability";
@@ -23,6 +24,7 @@ export type Impostazioni = {
   soglia_minima_ordine_cent: number | null;
   soglia_esaurimento_default: number;
   mesi_non_vendibile: number | null;
+  mesi_durata_residua_garantita: number;
 };
 
 export type PromoMerce = Pick<Promozione, "id" | "nome" | "tipo" | "compra" | "omaggio_quantita" | "omaggio_prodotto_codice">;
@@ -40,6 +42,8 @@ export type LottoCatalogo = {
   promoMerce: PromoMerce[];
   /** Omaggi extra non a magazzino (es. espositore) delle promozioni valide per questo lotto */
   promoExtra: PromoExtra[];
+  /** Durata residua inferiore a quella garantita dalle condizioni di vendita: richiede accettazione espressa */
+  durataRidotta: boolean;
 };
 
 export type ProdottoCatalogo = {
@@ -124,7 +128,7 @@ export async function caricaCatalogo(
     : null;
 
   const [imp, fasce, prodotti, lotti, giacenze, disp, promo, listino] = await Promise.all([
-    db.from("impostazioni").select("iva_predefinita, giorni_validita_prenotazione, giorni_consegna_indicativi, soglia_minima_ordine_cent, soglia_esaurimento_default, mesi_non_vendibile").single(),
+    db.from("impostazioni").select("iva_predefinita, giorni_validita_prenotazione, giorni_consegna_indicativi, soglia_minima_ordine_cent, soglia_esaurimento_default, mesi_non_vendibile, mesi_durata_residua_garantita").single(),
     db.from("fasce_sconto").select("mesi_minimi, sconto_percentuale").eq("attiva", true),
     qProdotti,
     qLotti,
@@ -187,6 +191,7 @@ export async function caricaCatalogo(
         stato,
         sconto,
         prezzi: sconto && prezzo != null ? calcolaPrezzi(prezzo, iva, sconto.sconto) : null,
+        durataRidotta: sottoDurataGarantita(l.scadenza, oggi, impostazioni.mesi_durata_residua_garantita),
         promoExtra: stato === "vendibile" ? promozioni.filter((pr) => promozioneSiApplica(pr, cosa, chi, oggi)).map(promoExtra).filter((x): x is PromoExtra => x !== null) : [],
         promoMerce: stato === "vendibile" ? promoMerce(promozioni, cosa, chi, oggi).map(({ id, nome, tipo, compra, omaggio_quantita, omaggio_prodotto_codice }) => ({ id, nome, tipo, compra, omaggio_quantita, omaggio_prodotto_codice })) : [],
       };

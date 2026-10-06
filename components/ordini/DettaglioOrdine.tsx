@@ -105,6 +105,11 @@ export function DettaglioOrdine({ ordine: o, vista, spedizione, azioniDdt }: { o
       ) : (
       <section className="panel p-4 sm:p-6 overflow-x-auto" aria-labelledby="t-righe">
         <h2 id="t-righe" className="text-lg font-serif text-magistra-blu mb-3">Prodotti</h2>
+        {o.durata_ridotta_accettata && (
+          <p className="avviso avviso-attenzione text-sm mb-3">
+            La farmacia ha accettato espressamente, all&apos;invio, lotti con durata residua inferiore a quella garantita dalle condizioni di vendita (art. 7.1).
+          </p>
+        )}
         <table className="tabella min-w-[720px]">
           <thead>
             <tr>

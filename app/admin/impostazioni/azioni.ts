@@ -43,6 +43,7 @@ export async function salvaImpostazioni(_prima: StatoModulo, fd: FormData): Prom
     email_notifiche_admin: email,
     mesi_non_vendibile: intero("mesi_non_vendibile", 0, 60, true),
     mesi_conservazione_chat: intero("mesi_conservazione_chat", 1, 120),
+    mesi_durata_residua_garantita: intero("mesi_durata_residua_garantita", 0, 36),
   };
   if (Object.keys(errori).length) return { errori, valori, messaggio: "Controlla i campi evidenziati." };
 

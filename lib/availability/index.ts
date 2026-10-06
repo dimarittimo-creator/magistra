@@ -117,3 +117,12 @@ export function disponibilePrivati(lotti: { scadenza: DataISO | null; disponibil
 export function lottoVisibile(stato: StatoLotto): boolean {
   return stato !== "scaduto" && stato !== "non_vendibile" && stato !== "prezzo_mancante";
 }
+
+/**
+ * Lotto con durata residua inferiore a quella garantita dalle condizioni di vendita (art. 7.1, default 8 mesi):
+ * va segnalato e accettato espressamente dalla farmacia prima dell'invio. Con 0 mesi la regola è spenta.
+ */
+export function sottoDurataGarantita(scadenza: DataISO | null, oggi: DataISO, mesiGarantiti: number): boolean {
+  if (!scadenza || mesiGarantiti <= 0) return false;
+  return scadenza < aggiungiMesi(oggi, mesiGarantiti);
+}

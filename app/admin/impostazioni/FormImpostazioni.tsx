@@ -47,6 +47,9 @@ export function FormImpostazioni({ iniziali }: { iniziali: Record<string, string
           aiuto="Nuove iscrizioni, nuovi ordini, solleciti DDT. Più indirizzi separati da virgola; vuoto = tutti gli amministratori" />
         <Campo nome="mesi_non_vendibile" etichetta="Lotti non vendibili sotto (mesi di scadenza)" valore={v.mesi_non_vendibile} errore={e.mesi_non_vendibile}
           inputMode="numeric" aiuto="Predisposta, di norma vuota: se indicata, i lotti con scadenza più vicina non si vendono" />
+        <Campo nome="mesi_durata_residua_garantita" etichetta="Durata residua garantita alle farmacie (mesi)" valore={v.mesi_durata_residua_garantita}
+          errore={e.mesi_durata_residua_garantita} inputMode="numeric"
+          aiuto="Come nelle condizioni di vendita (art. 7.1, oggi 8 mesi): i lotti con scadenza più vicina si possono ordinare solo accettandolo espressamente nel carrello. 0 = nessun controllo" />
         <Campo nome="mesi_conservazione_chat" etichetta="Conservazione delle chat dell'assistente (mesi)" valore={v.mesi_conservazione_chat} errore={e.mesi_conservazione_chat}
           inputMode="numeric" aiuto="Dopo questo periodo conversazioni e domande senza risposta si cancellano da sole (da 1 a 120 mesi)" />
       </fieldset>

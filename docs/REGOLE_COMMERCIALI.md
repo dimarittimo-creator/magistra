@@ -87,7 +87,13 @@ disponibile(lotto) = giacenza_importata
 
 Da mostrare nella pagina "Condizioni di vendita", nel riepilogo prima dell'invio (con casella **"Ho letto e accetto"** obbligatoria), nell'email di conferma, nell'export e nel DDT simulato. Testo modificabile dall'admin, con versione; ogni ordine salva la versione accettata.
 
-Clausole iniziali:
+**Aggiornamento 06/10/2026:** sono in vigore le condizioni generali fornite da Salvatore (`docs/legale/definitivi/condizioni_farmacie_v2.md`, versione 2 sul portale). Prevalgono sulle clausole iniziali qui sotto, in particolare:
+- **rischio del trasporto** (art. 6.3): passa alla farmacia **alla consegna** all'indirizzo concordato, non alla partenza;
+- **resi** (art. 8): nessun reso commerciale né per ripensamento, ma restano i rimedi per vizi, merce diversa o mancante, errori di fornitura e durata residua non conforme;
+- **durata residua** (art. 7.1): almeno **8 mesi** alla consegna; i lotti più corti si vendono solo con **accettazione espressa** nel carrello (impostazione `mesi_durata_residua_garantita`, casella obbligatoria, `ordini.durata_ridotta_accettata`);
+- **ordini modificati** (art. 4.3): le modifiche richiedono una nuova accettazione della farmacia (funzione del portale da completare).
+
+Clausole iniziali (superate dalle condizioni del 06/10/2026):
 1. **In nessun caso sono previsti resi.**
 2. **La merce viaggia a rischio e pericolo dell'acquirente.**
 3. **Tempi di consegna:** dipendono dall'andamento del magazzino; in linea di massima la consegna avviene **entro 5 giorni lavorativi** dalla conferma dell'ordine. Il valore (5) è un'impostazione modificabile e compare come "consegna indicativa" nel carrello e nel riepilogo; non è mai presentato come termine garantito.

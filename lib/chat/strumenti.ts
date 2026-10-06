@@ -127,6 +127,7 @@ function descriviLotto(l: LottoCatalogo) {
     origine_sconto: l.sconto ? ORIGINE_SCONTO[l.sconto.origine] ?? l.sconto.origine : null,
     prezzo_farmacia_iva_esclusa: l.prezzi ? formattaEuro(l.prezzi.farmaciaNettoCent) : null,
     prezzo_farmacia_iva_inclusa: l.prezzi ? formattaEuro(l.prezzi.farmaciaIvatoCent) : null,
+    durata_residua_inferiore_alla_garantita: l.durataRidotta,
     promozioni_merce: l.promoMerce.map((p) => `${p.nome}: ${descriviPromozione(p)}`),
     omaggi_extra: l.promoExtra.map((p) => `${p.nome}: ${descriviOmaggioExtra(p)}`),
   };

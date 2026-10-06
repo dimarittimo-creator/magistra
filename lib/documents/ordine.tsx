@@ -292,6 +292,11 @@ function RiepilogoOrdine({ o, condizioni }: { o: Ordine; condizioni: Condizioni 
         </View>
         <Righe o={o} />
         <Totali o={o} />
+        {o.durata_ridotta_accettata && (
+          <Text style={{ marginTop: 6, fontSize: 8 }}>
+            Il cliente ha accettato espressamente, all&apos;invio dell&apos;ordine, lotti con durata residua inferiore a quella garantita dalle condizioni di vendita (art. 7.1).
+          </Text>
+        )}
         <View style={[s.riquadri, { marginTop: 10 }]}>
           <Pagamento o={o} />
         </View>
@@ -337,6 +342,11 @@ function DdtSimulato({ o, partenza, condizioni }: { o: Ordine; partenza: LuogoPa
         </View>
         <Righe o={o} />
         <Totali o={o} />
+        {o.durata_ridotta_accettata && (
+          <Text style={{ marginTop: 6, fontSize: 8 }}>
+            Il cliente ha accettato espressamente, all&apos;invio dell&apos;ordine, lotti con durata residua inferiore a quella garantita dalle condizioni di vendita (art. 7.1).
+          </Text>
+        )}
         <View style={[s.riquadri, { marginTop: 10 }]}>
           <Pagamento o={o} />
         </View>

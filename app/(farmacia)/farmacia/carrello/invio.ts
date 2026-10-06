@@ -66,6 +66,11 @@ export async function inviaPrenotazione(_prima: StatoInvio, fd: FormData): Promi
   }
 
   const carrello = verificaCarrello(catalogo, salvate);
+  // Condizioni di vendita art. 7.1: la durata residua inferiore a quella garantita va accettata espressamente
+  const durataRidotta = carrello.lottiDurataRidotta.length > 0;
+  if (durataRidotta && !fd.get("accetto_durata_ridotta")) {
+    errori.accetto_durata_ridotta = `Per inviare la prenotazione devi accettare la durata residua inferiore a ${catalogo.impostazioni.mesi_durata_residua_garantita} mesi dei lotti indicati, oppure toglierli dal carrello`;
+  }
   if (!carrello.inviabile) {
     return {
       errori,
@@ -180,10 +185,13 @@ export async function inviaPrenotazione(_prima: StatoInvio, fd: FormData): Promi
   }
   if (esito.esito !== "ok") return { messaggio: "La tua iscrizione non risulta attiva: contatta l'amministrazione." };
 
-  // Omaggi extra non a magazzino (es. espositori): fotografia di quelli spettanti al momento dell'invio
-  if (carrello.omaggiExtra.length) {
-    const { error: errExtra } = await admin.from("ordini").update({ omaggi_extra: carrello.omaggiExtra }).eq("id", esito.ordine_id);
-    if (errExtra) console.error("[ordine] omaggi extra non salvati:", errExtra.message);
+  // Omaggi extra non a magazzino (es. espositori) e accettazione della durata residua ridotta: fotografia all'invio
+  if (carrello.omaggiExtra.length || durataRidotta) {
+    const { error: errExtra } = await admin
+      .from("ordini")
+      .update({ omaggi_extra: carrello.omaggiExtra, durata_ridotta_accettata: durataRidotta })
+      .eq("id", esito.ordine_id);
+    if (errExtra) console.error("[ordine] dati aggiuntivi non salvati:", errExtra.message);
   }
 
   // Email di conferma ricezione alla farmacia e avviso all'amministrazione

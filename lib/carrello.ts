@@ -23,6 +23,8 @@ export type CarrelloVerificato = {
   totali: Totali;
   /** Omaggi extra non a magazzino spettanti (es. espositori) */
   omaggiExtra: OmaggioExtra[];
+  /** Lotti con durata residua inferiore a quella garantita: serve l'accettazione espressa (condizioni art. 7.1) */
+  lottiDurataRidotta: { prodotto: string; lotto: string; scadenza: string | null }[];
   depositoId: string | null;
   problemiGenerali: string[];
   inviabile: boolean;
@@ -130,6 +132,7 @@ export function verificaCarrello(catalogo: Catalogo, salvate: { lotto_id: string
   return {
     righe: tutte,
     totali,
+    lottiDurataRidotta: valide.filter((r) => r.lotto!.durataRidotta).map((r) => ({ prodotto: r.prodotto!.nome, lotto: r.lotto!.codice_lotto, scadenza: r.lotto!.scadenza })),
     omaggiExtra: calcolaOmaggiExtra(valide.map((r) => ({ quantita: r.quantita, promoExtra: r.lotto!.promoExtra }))),
     depositoId: depositi.size === 1 ? [...depositi][0] : null,
     problemiGenerali,

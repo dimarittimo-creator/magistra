@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { Casella, EsitoModulo, PulsanteInvio } from "@/components/moduli";
 import type { StatoModulo } from "@/lib/farmacie/dati";
 import { aggiornaRigaCarrello } from "./azioni";
@@ -39,6 +39,7 @@ export function FormInvio({
   inviabile,
   etichetteLotti,
   totaleTesto,
+  durataRidotta,
 }: {
   societa: Societa[];
   societaPredefinitaId: string;
@@ -52,8 +53,12 @@ export function FormInvio({
   inviabile: boolean;
   etichetteLotti: Record<string, string>;
   totaleTesto: string;
+  /** Lotti sotto la durata residua garantita (scadenza già formattata gg/mm/aaaa) */
+  durataRidotta: { mesi: number; lotti: { prodotto: string; lotto: string; scadenza: string | null }[] };
 }) {
   const [stato, azione] = useActionState<StatoInvio, FormData>(inviaPrenotazione, {});
+  // Invio senza l'azzeramento automatico del modulo: se manca qualcosa, i campi già compilati restano.
+  const [inInvio, avvia] = useTransition();
   const [societaId, setSocietaId] = useState(societaPredefinitaId);
   const [pagamentoId, setPagamentoId] = useState("");
   const scelta = societa.find((s) => s.id === societaId);
@@ -61,7 +66,15 @@ export function FormInvio({
   const e = stato.errori ?? {};
 
   return (
-    <form action={azione} className="space-y-6" noValidate>
+    <form
+      className="space-y-6"
+      noValidate
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        const dati = new FormData(ev.currentTarget);
+        avvia(() => azione(dati));
+      }}
+    >
       <input type="hidden" name="condizioni_documento_id" value={condizioniId} />
 
       {stato.righe && (
@@ -146,13 +159,32 @@ export function FormInvio({
         <Casella nome="accetto_condizioni" errore={e.accetto_condizioni}>
           <strong>Ho letto e accetto</strong> le condizioni di vendita. <span className="text-danger" aria-hidden="true">*</span>
         </Casella>
+        {durataRidotta.lotti.length > 0 && (
+          <div className="avviso avviso-attenzione space-y-2">
+            <p>
+              <strong>Durata residua inferiore a {durataRidotta.mesi} mesi.</strong> Le condizioni di vendita (art. 7.1) garantiscono almeno {durataRidotta.mesi} mesi
+              di durata residua alla consegna; questi lotti ne hanno meno:
+            </p>
+            <ul className="list-disc pl-5 text-sm">
+              {durataRidotta.lotti.map((l) => (
+                <li key={l.lotto}>
+                  {l.prodotto} – lotto {l.lotto}, scadenza {l.scadenza ?? "—"}
+                </li>
+              ))}
+            </ul>
+            <Casella nome="accetto_durata_ridotta" errore={e.accetto_durata_ridotta}>
+              <strong>Accetto espressamente</strong> la durata residua inferiore a {durataRidotta.mesi} mesi per i lotti indicati.{" "}
+              <span className="text-danger" aria-hidden="true">*</span>
+            </Casella>
+          </div>
+        )}
       </section>
 
       {!stato.righe && <EsitoModulo messaggio={stato.messaggio} />}
       <div className="flex flex-wrap items-center gap-4">
-        <PulsanteInvio inCorso="Invio della prenotazione…" className={inviabile ? "" : "opacity-50"}>
-          Invia la prenotazione
-        </PulsanteInvio>
+        <button type="submit" disabled={inInvio} aria-disabled={inInvio} className={`btn btn-primary ${inviabile ? "" : "opacity-50"}`}>
+          {inInvio ? "Invio della prenotazione…" : "Invia la prenotazione"}
+        </button>
         <p className="text-sm text-muted">Prenotazione non vincolante: diventa definitiva con la nostra conferma.</p>
       </div>
     </form>

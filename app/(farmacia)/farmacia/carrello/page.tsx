@@ -125,6 +125,11 @@ export default async function Carrello() {
                     </p>
                   )}
                   {r.quantitaOmaggio > 0 && <p className="text-sm text-slate font-semibold">+ {r.quantitaOmaggio} pezzi in omaggio (sconto merce)</p>}
+                  {r.lotto?.durataRidotta && (
+                    <p className="text-sm text-amber font-semibold">
+                      Durata residua inferiore a {catalogo.impostazioni.mesi_durata_residua_garantita} mesi: da accettare prima dell&apos;invio
+                    </p>
+                  )}
                   {r.lotto?.promoExtra.map((p) => (
                     <p key={p.id} className="text-sm text-slate">Promozione «{p.nome}»: {descriviOmaggioExtra(p)}</p>
                   ))}
@@ -184,6 +189,10 @@ export default async function Carrello() {
             inviabile={carrello.inviabile}
             etichetteLotti={etichette}
             totaleTesto={formattaEuro(t.totaleCent)}
+            durataRidotta={{
+              mesi: catalogo.impostazioni.mesi_durata_residua_garantita,
+              lotti: carrello.lottiDurataRidotta.map((l) => ({ ...l, scadenza: l.scadenza ? formattaData(l.scadenza) : null })),
+            }}
           />
         ) : (
           <p className="avviso avviso-errore">Le condizioni di vendita non sono configurate: contatta l&apos;amministrazione.</p>
