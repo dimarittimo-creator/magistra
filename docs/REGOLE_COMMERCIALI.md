@@ -91,7 +91,7 @@ Da mostrare nella pagina "Condizioni di vendita", nel riepilogo prima dell'invio
 - **rischio del trasporto** (art. 6.3): passa alla farmacia **alla consegna** all'indirizzo concordato, non alla partenza;
 - **resi** (art. 8): nessun reso commerciale né per ripensamento, ma restano i rimedi per vizi, merce diversa o mancante, errori di fornitura e durata residua non conforme;
 - **durata residua** (art. 7.1): almeno **8 mesi** alla consegna; i lotti più corti si vendono solo con **accettazione espressa** nel carrello (impostazione `mesi_durata_residua_garantita`, casella obbligatoria, `ordini.durata_ridotta_accettata`);
-- **ordini modificati** (art. 4.3): le modifiche richiedono una nuova accettazione della farmacia (funzione del portale da completare).
+- **ordini modificati** (art. 4.3): dopo una modifica dell'amministrazione l'ordine resta «Modificato» con `modifiche_da_accettare`; il cliente accetta o rifiuta dalla pagina dell'ordine (email con pulsante); niente invio al deposito prima dell'accettazione; se rifiuta l'ordine si chiude, se non risponde entro la validità della prenotazione scade (`rispondi_modifiche_ordine`, `scadi_prenotazioni`).
 
 Clausole iniziali (superate dalle condizioni del 06/10/2026):
 1. **In nessun caso sono previsti resi.**

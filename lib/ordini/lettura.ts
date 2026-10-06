@@ -108,6 +108,9 @@ export type Ordine = {
   omaggi_extra: OmaggioExtra[];
   /** La farmacia ha accettato espressamente lotti con durata residua inferiore a quella garantita (condizioni art. 7.1) */
   durata_ridotta_accettata: boolean;
+  /** Ordine modificato dall'amministrazione in attesa che il cliente accetti le modifiche (condizioni art. 4.3) */
+  modifiche_da_accettare: boolean;
+  modifiche_accettate_il: string | null;
   creato_il: string;
   righe: RigaOrdine[];
   storico: { id: number; da: StatoOrdine | null; a: StatoOrdine; messaggio: string | null; il: string }[];
@@ -163,4 +166,10 @@ export function differenzeSpedizione(o: Ordine, s: Spedizione): string[] {
 export function formattaIndirizzoSnapshot(i: IndirizzoSnapshot | null): string {
   if (!i) return "—";
   return `${i.presso ? `c/o ${i.presso}, ` : ""}${i.indirizzo} – ${i.cap} ${i.citta} (${i.provincia})`;
+}
+
+/** Ultima nota dell'amministrazione sulla modifica dell'ordine (dallo storico degli stati). */
+export function notaModifica(o: Pick<Ordine, "storico">): string | null {
+  const ultima = [...o.storico].reverse().find((s) => s.a === "modificato" && s.messaggio);
+  return ultima?.messaggio && !["Modifiche accettate dal cliente", "Ordine modificato"].includes(ultima.messaggio) ? ultima.messaggio : null;
 }

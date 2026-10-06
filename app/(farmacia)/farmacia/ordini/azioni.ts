@@ -6,6 +6,7 @@ import { leggiRigheCarrello } from "@/lib/carrello";
 import { caricaCatalogo } from "@/lib/catalogo";
 import type { StatoModulo } from "@/lib/farmacie/dati";
 import { leggiOrdine } from "@/lib/ordini/lettura";
+import { rispondiModifiche } from "@/lib/ordini/modifiche";
 import { creaClientServer } from "@/lib/supabase/server";
 
 /**
@@ -50,4 +51,14 @@ export async function ripetiOrdine(ordineId: string): Promise<StatoModulo> {
     ok: true,
     messaggio: `${aggiunte === 1 ? "1 prodotto aggiunto" : `${aggiunte} prodotti aggiunti`} al carrello.${avvisi.length ? ` Attenzione: ${avvisi.join(" · ")}.` : ""}`,
   };
+}
+
+/** La farmacia accetta o rifiuta le modifiche fatte dall'amministrazione (condizioni di vendita art. 4.3). */
+export async function rispondiModificheFarmacia(ordineId: string, accetta: boolean, _prima: StatoModulo): Promise<StatoModulo> {
+  const utente = await richiediFarmaciaAttiva();
+  const ordine = await leggiOrdine(await creaClientServer(), ordineId);
+  if (!ordine || ordine.farmacia_id !== utente.farmaciaId) return { messaggio: "Ordine non trovato." };
+  const esito = await rispondiModifiche(ordineId, utente.id, accetta);
+  revalidatePath(`/farmacia/ordini/${ordineId}`);
+  return { ok: esito.ok, messaggio: esito.messaggio };
 }

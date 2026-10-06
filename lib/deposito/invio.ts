@@ -23,9 +23,9 @@ export async function inviaOrdiniAlDeposito(
   const ordini = (await Promise.all(ordiniIds.map((id) => leggiOrdine(db, id)))).filter((o): o is Ordine => !!o);
   // Privati con bonifico anticipato: al deposito solo dopo il pagamento ricevuto (docs/AREA_PRIVATI.md §6)
   const attesaPagamento = (o: Ordine) => o.canale === "privati" && o.snapshot_pagamento.richiede_iban && !o.pagamento_ricevuto_il;
-  const pronti = ordini.filter((o) => (o.stato === "confermato" || o.stato === "modificato") && !attesaPagamento(o));
+  const pronti = ordini.filter((o) => (o.stato === "confermato" || o.stato === "modificato") && !o.modifiche_da_accettare && !attesaPagamento(o));
   for (const o of ordini.filter((x) => !pronti.includes(x))) {
-    esito.errori.push(`${o.numero}: ${attesaPagamento(o) ? "in attesa del pagamento con bonifico" : "non è confermato"}`);
+    esito.errori.push(`${o.numero}: ${o.modifiche_da_accettare ? "in attesa che il cliente accetti le modifiche" : attesaPagamento(o) ? "in attesa del pagamento con bonifico" : "non è confermato"}`);
   }
 
   for (const [depositoId, gruppo] of Map.groupBy(pronti, (o) => o.deposito_id)) {

@@ -97,8 +97,8 @@ test("PDF ed Excel dell'ordine: totali uguali al riepilogo, dati fiscali della s
   await pa.goto(`/admin/ordini/${id}`);
   await pa.getByRole("button", { name: "Modifica (quantità, società, pagamento)" }).click();
   await pa.getByRole("combobox", { name: "Fattura e consegna" }).selectOption({ label: "Bioeleva" });
-  await pa.getByRole("button", { name: "Salva e conferma con modifiche" }).click();
-  await expect(pa.getByText("Ordine modificato e confermato")).toBeVisible();
+  await pa.getByRole("button", { name: "Salva le modifiche e chiedi l'accettazione" }).click();
+  await expect(pa.getByText("Ordine modificato: il cliente riceve il riepilogo aggiornato")).toBeVisible();
 
   const pdfBio = await testoPdf(page.request, `/api/ordini/${id}/documento/pdf`);
   expect(pdfBio).toContain("BIOELEVA S.r.l.");

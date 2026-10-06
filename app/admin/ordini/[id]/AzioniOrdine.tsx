@@ -105,7 +105,7 @@ function FormModifica({ id, righe, societa, pagamenti, societaId, pagamentoId, o
       <div className="flex gap-2">
         <button type="button" className="btn btn-primary" disabled={inCorso}
           onClick={() => avvia(async () => setEsito(await modificaOrdine(id, { righe: righe.map((r) => ({ rigaId: r.id, quantita: Number(quantita[r.id]) })), societaId: soc, pagamentoId: pag, messaggio })))}>
-          {inCorso ? "Salvataggio…" : "Salva e conferma con modifiche"}
+          {inCorso ? "Salvataggio…" : "Salva le modifiche e chiedi l'accettazione"}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onChiudi}>Annulla</button>
       </div>
@@ -206,6 +206,7 @@ export function AzioniOrdine(p: {
   cumulativa: boolean;
   orario: string;
   attesaBonifico: boolean;
+  modificheDaAccettare: boolean;
 }) {
   const [modifica, setModifica] = useState(false);
   const modificabile = ["inviato", "in_verifica", "confermato", "modificato"].includes(p.stato);
@@ -222,7 +223,15 @@ export function AzioniOrdine(p: {
         </div>
       )}
       {p.attesaBonifico && <PagamentoRicevuto id={p.id} />}
-      {(p.stato === "confermato" || p.stato === "modificato") && !p.attesaBonifico && <InvioDeposito id={p.id} cumulativa={p.cumulativa} orario={p.orario} />}
+      {p.modificheDaAccettare && (
+        <p className="avviso avviso-attenzione">
+          <strong>In attesa che il cliente accetti le modifiche</strong> (condizioni di vendita, art. 4.3). L&apos;ordine potrà andare al deposito
+          solo dopo la sua accettazione; se rifiuta o non risponde entro i termini, l&apos;ordine si chiude e la merce torna disponibile.
+        </p>
+      )}
+      {(p.stato === "confermato" || p.stato === "modificato") && !p.attesaBonifico && !p.modificheDaAccettare && (
+        <InvioDeposito id={p.id} cumulativa={p.cumulativa} orario={p.orario} />
+      )}
       {p.stato === "inviato_deposito" && <CambioStato id={p.id} nuovo="in_preparazione" testo="Segna «in preparazione»" variante="secondary" />}
       {(p.stato === "inviato_deposito" || p.stato === "in_preparazione") && (
         <section className="space-y-3">

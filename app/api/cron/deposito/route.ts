@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
   const oraRoma = new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
   const forza = request.nextUrl.searchParams.get("cumulativo") === "ora" && process.env.NODE_ENV !== "production";
   if (imp?.modalita_invio_deposito === "cumulativa" && (forza || (imp.ultimo_invio_cumulativo !== oggi && oraRoma >= String(imp.orario_invio_cumulativo).slice(0, 5)))) {
-    const { data: confermati } = await db.from("ordini").select("id, canale, pagamento_ricevuto_il, snapshot_pagamento").in("stato", ["confermato", "modificato"]);
-    // I privati con bonifico partono solo dopo il pagamento ricevuto
+    const { data: confermati } = await db.from("ordini").select("id, canale, pagamento_ricevuto_il, snapshot_pagamento").in("stato", ["confermato", "modificato"]).eq("modifiche_da_accettare", false);
+    // I privati con bonifico partono solo dopo il pagamento ricevuto; gli ordini modificati solo dopo l'accettazione del cliente
     const pronti = (confermati ?? []).filter((o) => !(o.canale === "privati" && (o.snapshot_pagamento as { richiede_iban: boolean }).richiede_iban && !o.pagamento_ricevuto_il));
     const esito = await inviaOrdiniAlDeposito(db, pronti.map((o) => o.id), { modalita: "cumulativa", utente: null });
     if (!esito.errori.length) await db.from("impostazioni").update({ ultimo_invio_cumulativo: oggi }).eq("id", true);

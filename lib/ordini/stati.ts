@@ -16,7 +16,7 @@ export const ETICHETTE_STATO_ORDINE: Record<StatoOrdine, { testo: string; classe
   inviato: { testo: "Inviato", classe: "pill-warn", spiegazione: "Prenotazione ricevuta, in attesa di conferma" },
   in_verifica: { testo: "In verifica", classe: "pill-warn", spiegazione: "La stiamo verificando" },
   confermato: { testo: "Confermato", classe: "pill-ok", spiegazione: "Ordine confermato" },
-  modificato: { testo: "Modificato", classe: "pill-ok", spiegazione: "Confermato con alcune modifiche" },
+  modificato: { testo: "Modificato", classe: "pill-warn", spiegazione: "Modificato da noi: le modifiche valgono dopo l'accettazione del cliente" },
   rifiutato: { testo: "Rifiutato", classe: "pill-bad", spiegazione: "Ordine non accettato" },
   scaduto: { testo: "Scaduto", classe: "pill-off", spiegazione: "Non confermato entro i termini: la merce è tornata disponibile" },
   inviato_deposito: { testo: "Inviato al deposito", classe: "pill-ok", spiegazione: "In attesa di preparazione" },

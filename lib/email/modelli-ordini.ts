@@ -173,7 +173,8 @@ export type DatiSpedizioneEmail = { ddt_numero: string; ddt_data: string; corrie
 const TESTI_STATO: Partial<Record<Ordine["stato"], (numero: string) => string>> = {
   in_verifica: (n) => `stiamo verificando la prenotazione <strong>${n}</strong>.`,
   confermato: (n) => `l'ordine <strong>${n}</strong> è <strong>confermato</strong>. Lo prepareremo e ti avviseremo alla spedizione.`,
-  modificato: (n) => `l'ordine <strong>${n}</strong> è stato <strong>confermato con alcune modifiche</strong>: trovi qui sotto il riepilogo aggiornato.`,
+  modificato: (n) =>
+    `abbiamo <strong>modificato</strong> l'ordine <strong>${n}</strong>: trovi qui sotto il riepilogo aggiornato. Come previsto dalle condizioni di vendita, <strong>le modifiche diventano valide solo se le accetti</strong>: apri l'ordine e scegli «Accetto le modifiche» oppure «Non accetto». Finché non rispondi l'ordine non viene spedito.`,
   rifiutato: (n) => `purtroppo non possiamo accettare l'ordine <strong>${n}</strong>. La merce prenotata torna disponibile.`,
   inviato_deposito: (n) => `l'ordine <strong>${n}</strong> è stato trasmesso al deposito per la preparazione.`,
   in_preparazione: (n) => `il deposito sta preparando l'ordine <strong>${n}</strong>.`,
@@ -201,7 +202,7 @@ export function emailCambioStato(o: Ordine, messaggio: string | null, spedizione
   blocchi.push(datiSocieta(o));
   const oggetto: Partial<Record<Ordine["stato"], string>> = {
     confermato: "confermato",
-    modificato: "confermato con modifiche",
+    modificato: "modificato: accetta le modifiche",
     rifiutato: "non accettato",
     spedito: "spedito",
     consegnato: "consegnato",
@@ -209,8 +210,10 @@ export function emailCambioStato(o: Ordine, messaggio: string | null, spedizione
     in_preparazione: "in preparazione",
     in_verifica: "in verifica",
   };
+  const daAccettare = o.stato === "modificato" && o.modifiche_da_accettare;
+  if (daAccettare && o.scade_il) blocchi.push(`Se non rispondi entro il ${formattaDataOra(o.scade_il)} l'ordine scade e la merce torna disponibile.`);
   return componi(c.email, `Magistra – Ordine ${o.numero} ${oggetto[o.stato] ?? "aggiornato"}`, blocchi, {
-    testo: "Vedi l'ordine",
+    testo: daAccettare ? "Vedi e accetta le modifiche" : "Vedi l'ordine",
     url: `${sito()}/${o.canale === "privati" ? "negozio" : "farmacia"}/ordini/${o.id}`,
   });
 }
@@ -255,9 +258,22 @@ export function emailPrenotazioneScaduta(o: Pick<Ordine, "id" | "numero" | "snap
     `Magistra – Prenotazione ${o.numero} scaduta`,
     [
       `Gentile ${esc(c.titolare)},`,
-      `la prenotazione <strong>${o.numero}</strong> non è stata confermata entro i termini ed è scaduta: la merce è tornata disponibile.`,
+      `la prenotazione <strong>${o.numero}</strong> non è stata completata entro i termini (conferma dell'ordine o accettazione delle modifiche) ed è scaduta: la merce è tornata disponibile.`,
       "Se ti serve ancora puoi ripeterla con un clic dalla pagina «I miei ordini».",
     ],
     { testo: "Vai ai miei ordini", url: `${sito()}/farmacia/ordini/${o.id}` },
+  );
+}
+
+/** Avviso all'amministrazione: il cliente ha accettato o rifiutato le modifiche all'ordine (condizioni art. 4.3). */
+export function emailRispostaModificheAdmin(a: string[], o: Ordine, accettate: boolean): Email {
+  const cliente = o.snapshot_cliente.ragione_sociale;
+  return componi(
+    a,
+    `Magistra – Ordine ${o.numero}: modifiche ${accettate ? "accettate" : "NON accettate"} da ${cliente}`,
+    accettate
+      ? [`<strong>${esc(cliente)}</strong> ha <strong>accettato</strong> le modifiche all'ordine <strong>${o.numero}</strong>.`, "Ora l'ordine si può inviare al deposito.", tabellaRighe(o)]
+      : [`<strong>${esc(cliente)}</strong> <strong>non ha accettato</strong> le modifiche all'ordine <strong>${o.numero}</strong>.`, "L'ordine è stato chiuso e la merce prenotata è tornata disponibile."],
+    { testo: "Apri l'ordine", url: `${sito()}/admin/ordini/${o.id}` },
   );
 }

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AccettaModifiche } from "@/components/ordini/AccettaModifiche";
 import { BadgeStatoOrdine, DettaglioOrdine } from "@/components/ordini/DettaglioOrdine";
 import { richiediFarmaciaAttiva } from "@/lib/auth";
 import { formattaDataOra } from "@/lib/formato";
-import { leggiOrdine, leggiSpedizione } from "@/lib/ordini/lettura";
+import { leggiOrdine, leggiSpedizione, notaModifica } from "@/lib/ordini/lettura";
 import { creaClientServer } from "@/lib/supabase/server";
+import { rispondiModificheFarmacia } from "../azioni";
 import { RipetiOrdine } from "./RipetiOrdine";
 
 export const metadata = { title: "Ordine" };
@@ -41,6 +43,17 @@ export default async function PaginaOrdine({ params, searchParams }: { params: P
         </div>
         <RipetiOrdine ordineId={ordine.id} />
       </header>
+      {ordine.modifiche_da_accettare && (
+        <AccettaModifiche
+          accetta={rispondiModificheFarmacia.bind(null, ordine.id, true)}
+          rifiuta={rispondiModificheFarmacia.bind(null, ordine.id, false)}
+          nota={notaModifica(ordine)}
+          scadenza={ordine.scade_il ? formattaDataOra(ordine.scade_il) : null}
+        />
+      )}
+      {ordine.modifiche_accettate_il && (
+        <p className="avviso avviso-ok">Hai accettato le modifiche a questo ordine il {formattaDataOra(ordine.modifiche_accettate_il)}.</p>
+      )}
       <DettaglioOrdine ordine={ordine} vista="farmacia" spedizione={spedizione} />
     </div>
   );

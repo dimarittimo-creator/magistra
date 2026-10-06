@@ -122,14 +122,14 @@ test("modifica prima dell'invio al deposito (quantità e società) e rifiuto con
   await page.getByLabel(`Quantità Prodotto di prova ${prodotto.codice}`).fill("2");
   await page.getByRole("combobox", { name: "Fattura e consegna" }).selectOption({ label: "Bioeleva" });
   await page.getByLabel("Messaggio per la farmacia").fill("Disponibili solo 2 pezzi per ora");
-  await page.getByRole("button", { name: "Salva e conferma con modifiche" }).click();
-  await expect(page.getByText("Ordine modificato e confermato")).toBeVisible();
+  await page.getByRole("button", { name: "Salva le modifiche e chiedi l'accettazione" }).click();
+  await expect(page.getByText("Ordine modificato: il cliente riceve il riepilogo aggiornato")).toBeVisible();
 
   const { data: o } = await db.from("ordini").select("stato, totale_cent, snapshot_societa, righe:righe_ordine(quantita)").eq("id", ordine.id).single();
   expect(o?.stato).toBe("modificato");
   expect((o?.snapshot_societa as { codice: string }).codice).toBe("bioeleva");
   expect((o?.righe as { quantita: number }[])[0].quantita).toBe(2);
-  const email = await attendiEmail(farmacia.email, `Ordine ${ordine.numero} confermato con modifiche`);
+  const email = await attendiEmail(farmacia.email, `Ordine ${ordine.numero} modificato: accetta le modifiche`);
   expect(email).toContain("BIOELEVA S.r.l.");
   expect(email).toContain("Disponibili solo 2 pezzi per ora");
 
@@ -143,4 +143,60 @@ test("modifica prima dell'invio al deposito (quantità e società) e rifiuto con
   await expect(page.locator("header").getByText("Rifiutato")).toBeVisible();
   const rifiuto = await attendiEmail(farmacia.email, `Ordine ${ordine.numero} non accettato`);
   expect(rifiuto).toContain("Prova di rifiuto");
+});
+
+// Condizioni di vendita art. 4.3: le modifiche richiedono una nuova accettazione del cliente.
+async function modifica(page: Page, ordineId: string, quantita: string, messaggio: string) {
+  await page.goto(`/admin/ordini/${ordineId}`);
+  await page.getByRole("button", { name: "Modifica (quantità, società, pagamento)" }).click();
+  await page.getByLabel(`Quantità Prodotto di prova ${prodotto.codice}`).fill(quantita);
+  await page.getByLabel("Messaggio per la farmacia").fill(messaggio);
+  await page.getByRole("button", { name: "Salva le modifiche e chiedi l'accettazione" }).click();
+  await expect(page.getByText("deve accettare le modifiche prima dell'invio al deposito")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("In attesa che il cliente accetti le modifiche")).toBeVisible();
+}
+
+test("ordine modificato: va al deposito solo dopo che la farmacia accetta le modifiche", async ({ browser }) => {
+  const ordine = await prenota(browser, 5, "Sagè Pharma");
+  const pa = await adminSu(browser);
+  await modifica(pa, ordine.id, "3", "Ne abbiamo solo 3 disponibili");
+  await expect(pa.getByRole("button", { name: "Invia al deposito" })).toHaveCount(0);
+  const { data: prima } = await db.from("ordini").select("modifiche_da_accettare, scade_il").eq("id", ordine.id).single();
+  expect(prima!.modifiche_da_accettare).toBe(true);
+  expect(prima!.scade_il).not.toBeNull();
+  const email = await attendiEmail(farmacia.email, `Ordine ${ordine.numero} modificato: accetta le modifiche`);
+  expect(email).toContain("le modifiche diventano valide solo se le accetti");
+
+  // La farmacia vede le modifiche e le accetta
+  await ordine.page.goto(`/farmacia/ordini/${ordine.id}`);
+  await expect(ordine.page.getByText("Ne abbiamo solo 3 disponibili").first()).toBeVisible();
+  await ordine.page.getByRole("button", { name: "Accetto le modifiche" }).click();
+  await expect(ordine.page.getByText("Hai accettato le modifiche a questo ordine")).toBeVisible();
+  await attendiEmail(admin.email, `Ordine ${ordine.numero}: modifiche accettate`);
+
+  // Ora l'amministrazione può inviarlo al deposito
+  await pa.reload();
+  await expect(pa.getByRole("button", { name: "Invia al deposito" })).toBeVisible();
+  await expect(pa.getByText("In attesa che il cliente accetti le modifiche")).toHaveCount(0);
+});
+
+test("se la farmacia non accetta le modifiche l'ordine si chiude; se non risponde, scade", async ({ browser }) => {
+  const pa = await adminSu(browser);
+
+  const primo = await prenota(browser, 4, "Sagè Pharma");
+  await modifica(pa, primo.id, "2", "Proposta ridotta");
+  await primo.page.goto(`/farmacia/ordini/${primo.id}`);
+  primo.page.once("dialog", (d) => d.accept());
+  await primo.page.getByRole("button", { name: "Non accetto" }).click();
+  await expect(primo.page.locator("header").getByText("Rifiutato")).toBeVisible();
+  await attendiEmail(admin.email, `Ordine ${primo.numero}: modifiche NON accettate`);
+
+  const secondo = await prenota(browser, 4, "Sagè Pharma");
+  await modifica(pa, secondo.id, "1", "Proposta minima");
+  await db.from("ordini").update({ scade_il: new Date(Date.now() - 60_000).toISOString() }).eq("id", secondo.id);
+  const r = await fetch("http://localhost:3000/api/cron/scadenze", { headers: process.env.CRON_SECRET ? { authorization: `Bearer ${process.env.CRON_SECRET}` } : {} });
+  expect(r.ok).toBe(true);
+  const { data: scaduto } = await db.from("ordini").select("stato, modifiche_da_accettare").eq("id", secondo.id).single();
+  expect(scaduto).toEqual({ stato: "scaduto", modifiche_da_accettare: false });
 });

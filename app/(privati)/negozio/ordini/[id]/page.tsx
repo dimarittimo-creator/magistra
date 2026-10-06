@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AccettaModifiche } from "@/components/ordini/AccettaModifiche";
 import { BadgeStatoOrdine, DettaglioOrdine } from "@/components/ordini/DettaglioOrdine";
 import { richiediPrivato } from "@/lib/auth";
 import { formattaDataOra, formattaEuro } from "@/lib/formato";
-import { leggiOrdine, leggiSpedizione } from "@/lib/ordini/lettura";
+import { leggiOrdine, leggiSpedizione, notaModifica } from "@/lib/ordini/lettura";
 import { creaClientServer } from "@/lib/supabase/server";
 import { formattaIban } from "@/lib/validazione";
+import { rispondiModifichePrivato } from "../azioni";
 
 export const metadata = { title: "Il tuo ordine" };
 
@@ -39,6 +41,17 @@ export default async function OrdinePrivato({ params, searchParams }: { params: 
         <h1 className="text-3xl text-magistra-blu">Ordine {ordine.numero}<span className="filetto" aria-hidden="true" /></h1>
         <p className="mt-3 text-muted">Del {formattaDataOra(ordine.creato_il)} · <BadgeStatoOrdine stato={ordine.stato} /></p>
       </header>
+      {ordine.modifiche_da_accettare && (
+        <AccettaModifiche
+          accetta={rispondiModifichePrivato.bind(null, ordine.id, true)}
+          rifiuta={rispondiModifichePrivato.bind(null, ordine.id, false)}
+          nota={notaModifica(ordine)}
+          scadenza={ordine.scade_il ? formattaDataOra(ordine.scade_il) : null}
+        />
+      )}
+      {ordine.modifiche_accettate_il && (
+        <p className="avviso avviso-ok">Hai accettato le modifiche a questo ordine il {formattaDataOra(ordine.modifiche_accettate_il)}.</p>
+      )}
       <DettaglioOrdine ordine={ordine} vista="privato" spedizione={spedizione} />
     </div>
   );

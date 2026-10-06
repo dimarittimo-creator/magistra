@@ -56,6 +56,7 @@ export default async function OrdineAdmin({ params }: { params: Promise<{ id: st
             cumulativa={imp?.modalita_invio_deposito === "cumulativa"}
             orario={String(imp?.orario_invio_cumulativo ?? "12:00").slice(0, 5)}
             attesaBonifico={ordine.canale === "privati" && ordine.snapshot_pagamento.richiede_iban && !ordine.pagamento_ricevuto_il}
+            modificheDaAccettare={ordine.modifiche_da_accettare}
           />
         </section>
       )}

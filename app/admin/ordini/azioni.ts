@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { richiediStaff } from "@/lib/auth";
 import { inviaOrdiniAlDeposito } from "@/lib/deposito/invio";
+import { aggiungiGiorniLavorativi, fineGiornoRoma, oggiRoma } from "@/lib/date";
 import { inviaEmail } from "@/lib/email/invia";
 import { emailCambioStato } from "@/lib/email/modelli-ordini";
 import { leggi, type StatoModulo } from "@/lib/farmacie/dati";
@@ -108,7 +109,7 @@ export async function modificaOrdine(id: string, m: ModificaOrdine): Promise<Sta
       imponibile_cent: totali.imponibileCent, sconti_cent: totali.scontiCent, iva_cent: totali.ivaCent, iva_dettaglio: totali.ivaDettaglio, totale_cent: totali.totaleCent,
     },
     p_righe: righe.map((r) => ({ ...r, promozione_id: null })),
-    p_messaggio: m.messaggio.slice(0, 1000) || "Ordine confermato con modifiche",
+    p_messaggio: m.messaggio.slice(0, 1000) || "Ordine modificato",
   });
   if (error) return { messaggio: "Modifica non riuscita. Riprova." };
   if (esito.esito === "merce_insufficiente") {
@@ -117,6 +118,18 @@ export async function modificaOrdine(id: string, m: ModificaOrdine): Promise<Sta
     return { righe: perLotto, messaggio: "Per alcune righe non c'è abbastanza merce." };
   }
   if (esito.esito !== "ok") return { messaggio: "L'ordine non è più modificabile (già inviato al deposito?)." };
+
+  // Condizioni di vendita art. 4.3: le modifiche vanno accettate dal cliente prima dell'invio al deposito,
+  // entro la stessa validità di una prenotazione; altrimenti l'ordine scade e la merce torna disponibile.
+  const { data: imp } = await db.from("impostazioni").select("giorni_validita_prenotazione").single();
+  await creaClientAdmin()
+    .from("ordini")
+    .update({
+      modifiche_da_accettare: true,
+      modifiche_accettate_il: null,
+      scade_il: fineGiornoRoma(aggiungiGiorniLavorativi(oggiRoma(), imp?.giorni_validita_prenotazione ?? 3)),
+    })
+    .eq("id", id);
 
   await registraOperazione(db, utente.id, {
     azione: "modifica_ordine",
@@ -128,7 +141,7 @@ export async function modificaOrdine(id: string, m: ModificaOrdine): Promise<Sta
   const aggiornato = await leggiOrdine(db, id);
   if (aggiornato) await inviaEmail(emailCambioStato(aggiornato, m.messaggio || null));
   aggiorna(id);
-  return { ok: true, messaggio: "Ordine modificato e confermato: la farmacia riceve il riepilogo aggiornato." };
+  return { ok: true, messaggio: "Ordine modificato: il cliente riceve il riepilogo aggiornato e deve accettare le modifiche prima dell'invio al deposito." };
 }
 
 /** Ordini dei privati con bonifico: vanno al deposito solo dopo che l'admin segna il pagamento ricevuto. */
