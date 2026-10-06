@@ -76,7 +76,7 @@ I dati indicati come obbligatori nei moduli servono a registrarsi e a ordinare: 
 
 **9. Cookie**
 
-Il portale usa solo cookie tecnici necessari all'accesso e alla sicurezza della sessione. Non usa cookie di profilazione né strumenti di statistica di terze parti; per questo non è richiesto un consenso ai cookie.
+Il portale usa solo cookie tecnici, necessari a mantenere l'accesso all'area riservata: il cookie "sb-…-auth-token" viene creato solo dopo l'accesso, conserva la sessione dell'utente collegato, dura al massimo 400 giorni e viene eliminato con il pulsante "Esci". I visitatori non collegati non ricevono alcun cookie. Il portale non usa cookie di profilazione, strumenti di statistica di terze parti, pulsanti social o contenuti incorporati da altri siti: per questo, secondo le Linee guida del Garante per la protezione dei dati personali del 10 giugno 2021 su cookie e altri strumenti di tracciamento, non è richiesto un consenso ai cookie. [DA VERIFICARE: durata del cookie di sessione]
 
 **10. Diritti dell'interessato**
 
