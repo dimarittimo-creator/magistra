@@ -9,7 +9,7 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
 - [x] Fase 5 – Area Privati (B2C) — **completata** e approvata (30/09/2026). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
 - [x] Fase 6 – Chatbot — **completata** e approvata (30/09/2026): test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
-- [ ] Fase 7 – Messa online — **in corso**: online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito, testi legali definitivi; area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
+- [ ] Fase 7 – Messa online — **in corso**: online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito, accettazione delle modifiche agli ordini (art. 4.3); area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
 
 ## Fase 0 – cosa c'è
 - Next.js + TypeScript + Tailwind con i token colore di `GRAFICA.md` (chiaro e scuro) in `app/globals.css`; caratteri Tinos e Public Sans.
@@ -153,6 +153,11 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 
 ### Da sapere per la messa online
 - Il job ogni 15 minuti su Vercel richiede il piano Pro; con il piano gratuito si può eseguire una volta al giorno.
+
+## Testi legali definitivi (06/10/2026)
+- Pubblicate online le versioni 2 (definitive) di **informativa privacy** e **condizioni di vendita farmacie**, fornite da Salvatore, con sole correzioni di forma (sito Magistra, Bioeleva tra i venditori, rimando alla privacy di Magistra, sezione cookie tecnici). Testi in `docs/legale/definitivi/`; script `scripts/pubblica-documento-legale.mts`.
+- Adeguamento del portale all'art. 7.1 (durata residua ≥ 8 mesi): lotti più corti solo con accettazione espressa nel carrello. **Da fare** (art. 4.3): accettazione della farmacia quando l'admin modifica un ordine; nel frattempo concordare le modifiche con la farmacia.
+- Da valutare col consulente: l'informativa indica solo Sagè Pharma come titolare (Bioeleva fattura anche lei) e non cita ordini, consegne e chat in dettaglio.
 
 ## Prodotti disattivati (05/10/2026)
 - Su richiesta di Salvatore disattivati online 15 prodotti (registro operazioni): ADEGEN, APSTEROL, ELIVID, FORTIRENE 200, MICROLIT, SEREDOR 10ML, SEREDOR 20CPR, VENOSELLE, SAGEVIT OVER, SAGEVIT, SAGEPA-B, PRIMUS FITO, PRIMUS 10 FLACONCINI, PRIMUS 300 FLACONE, RELAMI. Restano nello storico ordini; l'import del deposito non li riattiva; si riattivano da Admin → Prodotti.
