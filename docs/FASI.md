@@ -58,6 +58,14 @@ Tutto come in `AREA_PRIVATI.md`:
 - Architettura pronta per una versione vocale (base di conoscenza separata dal canale).
 **Accettazione:** il chatbot non inventa prodotti o dati, non dà consigli su singoli pazienti, chiede conferma prima del carrello.
 
+## Fase 8 – Area Medici (aggiunta il 18/10/2026, vedi docs/AREA_MEDICI.md)
+- Pulsante «Medici» in home; registrazione del medico con numero di iscrizione all'Ordine; conferma email e approvazione dell'admin.
+- Schede prodotto senza prezzi, con i testi della base di conoscenza approvati per i medici.
+- Materiale scientifico in PDF caricato dall'admin e scaricabile dai medici approvati.
+- Assistente virtuale per i medici (solo contenuti approvati, nessun dato commerciale) con passaggio a operatore.
+- Richiesta campioni gratuiti con gestione nel pannello admin ed email.
+**Accettazione:** un medico si iscrive, l'admin lo approva, il medico consulta schede e materiale, chiede un campione e l'admin lo gestisce; un medico non approvato o una farmacia non vedono i contenuti riservati; nessun prezzo visibile ai medici.
+
 ## Fase 7 – Messa online
 - Progetto Supabase EU e Vercel di produzione (con Salvatore, passo passo).
 - Collegamento del dominio registrato su Aruba (istruzioni DNS precise).

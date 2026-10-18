@@ -29,6 +29,7 @@ Il titolare, Salvatore Di Marino, **non è uno sviluppatore**. Quindi:
 6. `docs/DEPOSITO_E_SPEDIZIONI.md` – flusso verso il deposito e DDT.
 7. `docs/IMPORT_EXCEL.md` – formato dei file del deposito e del listino.
 8. `docs/GRAFICA.md` – marchio, colori, caratteri.
+4b. `docs/AREA_MEDICI.md` – area Medici (Fase 8). **Vincolante.**
 9. `docs/FASI.md` – ordine di sviluppo e criteri di accettazione.
 10. `docs/CONFORMITA.md` – GDPR, AI Act, tutela del consumatore, sicurezza.
 
