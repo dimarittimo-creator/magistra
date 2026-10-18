@@ -3,6 +3,8 @@ import { Public_Sans, Tinos } from "next/font/google";
 import "./globals.css";
 import { Intestazione } from "@/components/Intestazione";
 import { PiePagina } from "@/components/PiePagina";
+import { AssistenzaProvider } from "@/components/Assistenza";
+import { emailAssistenza } from "@/lib/assistenza";
 
 const publicSans = Public_Sans({
   subsets: ["latin"],
@@ -35,13 +37,16 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const assistenza = await emailAssistenza();
   return (
     <html lang="it" className={`${publicSans.variable} ${tinos.variable}`}>
       <body className="min-h-dvh flex flex-col">
-        <Intestazione />
-        <main className="flex-1">{children}</main>
-        <PiePagina />
+        <AssistenzaProvider email={assistenza}>
+          <Intestazione />
+          <main className="flex-1">{children}</main>
+          <PiePagina emailAssistenza={assistenza} />
+        </AssistenzaProvider>
       </body>
     </html>
   );

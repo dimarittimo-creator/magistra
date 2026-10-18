@@ -43,6 +43,8 @@ export function FormImpostazioni({ iniziali }: { iniziali: Record<string, string
 
       <fieldset className="grid gap-4">
         <legend className="text-xl font-serif text-magistra-blu mb-2">Notifiche e regole avanzate</legend>
+        <Campo nome="email_assistenza" etichetta="Email per l'assistenza ai clienti" tipo="email" valore={v.email_assistenza} errore={e.email_assistenza}
+          aiuto="Mostrata nel piè di pagina e sotto i messaggi di errore, per farmacie, privati e medici. Vuoto = non mostrata" />
         <Campo nome="email_notifiche_admin" etichetta="Email per gli avvisi all'amministrazione" valore={v.email_notifiche_admin} errore={e.email_notifiche_admin}
           aiuto="Nuove iscrizioni, nuovi ordini, solleciti DDT. Più indirizzi separati da virgola; vuoto = tutti gli amministratori" />
         <Campo nome="mesi_non_vendibile" etichetta="Lotti non vendibili sotto (mesi di scadenza)" valore={v.mesi_non_vendibile} errore={e.mesi_non_vendibile}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useEmailAssistenza } from "@/components/Assistenza";
 
 // Elementi comuni dei moduli: etichetta sempre visibile, errore sotto il campo
 // collegato con aria-describedby, pulsante che si disattiva durante l'invio.
@@ -158,10 +159,16 @@ export function PulsanteInvio({
 
 /** Messaggio generale del modulo: verde se ok, rosso se errore. Annunciato ai lettori di schermo. */
 export function EsitoModulo({ ok, messaggio }: { ok?: boolean; messaggio?: string }) {
+  const assistenza = useEmailAssistenza();
   if (!messaggio) return null;
   return (
-    <p role={ok ? "status" : "alert"} className={`avviso ${ok ? "avviso-ok" : "avviso-errore"}`}>
-      {messaggio}
-    </p>
+    <div role={ok ? "status" : "alert"} className={`avviso ${ok ? "avviso-ok" : "avviso-errore"}`}>
+      <p>{messaggio}</p>
+      {!ok && assistenza && (
+        <p className="mt-1 text-sm">
+          Serve aiuto? Scrivi a <a href={`mailto:${assistenza}`} className="font-semibold underline">{assistenza}</a>
+        </p>
+      )}
+    </div>
   );
 }

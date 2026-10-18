@@ -220,6 +220,7 @@ In modalità di prova le risposte sono semplici e riconoscono solo alcune parole
 - 29/09/2026 (v3): progetto rinominato **Magistra**, pay off "Semplicemente Magistrale", logo in `design/logo_magistra.jpg` con colori `magistra-blu` e `magistra-rame`; IBAN Sagè Pharma inserito; operatore logistico NEW CIENNE DISTRIBUZIONE S.R.L. con email per le richieste di evasione; IBAN Bioeleva inserito; la merce parte dal deposito CIENNE (Via Salvatore Piccolo 211, ASI Napoli), Via Guantai ad Orsolone diventa unità operativa amministrativa; pulsanti in blu Magistra.
 
 ## In sospeso dal gruppo
+- Email per l'assistenza ai clienti (Admin → Impostazioni): finché è vuota non compare nel piè di pagina né sotto i messaggi di errore.
 - Esempio del PDF/Excel d'ordine inviato oggi al deposito.
 - Eventuali altri indirizzi CIENNE in copia per le richieste di evasione.
 - Eventuali altre sedi operative o depositi.

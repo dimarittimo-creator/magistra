@@ -30,6 +30,8 @@ export async function salvaImpostazioni(_prima: StatoModulo, fd: FormData): Prom
   const email = leggi(fd, "email_notifiche_admin").split(/[\s,;]+/).map((e) => e.toLowerCase()).filter(Boolean);
   const errate = email.filter((e) => !emailValida(e));
   if (errate.length) errori.email_notifiche_admin = `Indirizzi non validi: ${errate.join(", ")}`;
+  const emailAssistenza = leggi(fd, "email_assistenza").toLowerCase();
+  if (emailAssistenza && !emailValida(emailAssistenza)) errori.email_assistenza = "Indirizzo email non valido";
 
   const dati = {
     giorni_validita_prenotazione: intero("giorni_validita_prenotazione", 1, 30),
@@ -41,6 +43,7 @@ export async function salvaImpostazioni(_prima: StatoModulo, fd: FormData): Prom
     ore_sollecito_ddt: intero("ore_sollecito_ddt", 1, 720),
     prezzi_in_richiesta_evasione: Boolean(fd.get("prezzi_in_richiesta_evasione")),
     email_notifiche_admin: email,
+    email_assistenza: emailAssistenza || null,
     mesi_non_vendibile: intero("mesi_non_vendibile", 0, 60, true),
     mesi_conservazione_chat: intero("mesi_conservazione_chat", 1, 120),
     mesi_durata_residua_garantita: intero("mesi_durata_residua_garantita", 0, 36),

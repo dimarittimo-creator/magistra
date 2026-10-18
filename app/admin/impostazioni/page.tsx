@@ -19,6 +19,7 @@ export default async function Impostazioni() {
     ore_sollecito_ddt: String(i.ore_sollecito_ddt),
     prezzi_in_richiesta_evasione: i.prezzi_in_richiesta_evasione ? "on" : "",
     email_notifiche_admin: (i.email_notifiche_admin ?? []).join(", "),
+    email_assistenza: i.email_assistenza ?? "",
     mesi_non_vendibile: i.mesi_non_vendibile == null ? "" : String(i.mesi_non_vendibile),
     mesi_conservazione_chat: String(i.mesi_conservazione_chat),
     mesi_durata_residua_garantita: String(i.mesi_durata_residua_garantita),
