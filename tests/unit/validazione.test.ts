@@ -9,6 +9,7 @@ import {
   passwordValida,
   provinciaValida,
   sdiValido,
+  normalizzaTelefono,
   telefonoValido,
 } from "@/lib/validazione";
 import { formattaData, formattaDataOra, formattaEuro } from "@/lib/formato";
@@ -86,5 +87,34 @@ describe("Formati italiani", () => {
   });
   it("data e ora nel fuso di Roma, anche da un server in UTC", () => {
     expect(formattaDataOra("2026-09-28T22:30:00Z")).toBe("29/09/2026 00:30");
+  });
+});
+
+describe("Telefono", () => {
+  it("accetta i formati scritti di solito", () => {
+    for (const t of [
+      "081 1234567",
+      "(081) 1234567",
+      "+39 (0)81 1234567",
+      "081–1234567",
+      "+39 333‑1234567",
+      "tel. 081 1234567",
+      "Cell: 333 123 4567",
+      "081/1234567",
+      "0039 333 1234567",
+      "+39 333 1234567",
+    ]) {
+      expect(telefonoValido(t), t).toBe(true);
+    }
+  });
+  it("rifiuta testo, numeri troppo corti o troppo lunghi", () => {
+    expect(telefonoValido("12ab")).toBe(false);
+    expect(telefonoValido("12345")).toBe(false);
+    expect(telefonoValido("081 1234567 int. 2")).toBe(false);
+    expect(telefonoValido("1234567890123456")).toBe(false);
+  });
+  it("salva il numero ripulito", () => {
+    expect(normalizzaTelefono("  tel.  081–1234567 ")).toBe("081-1234567");
+    expect(normalizzaTelefono("+39 333 1234567")).toBe("+39 333 1234567");
   });
 });

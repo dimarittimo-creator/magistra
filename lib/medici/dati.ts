@@ -1,7 +1,7 @@
 // Lettura e controllo dei dati di un medico (docs/AREA_MEDICI.md §1).
 // Unico punto usato da iscrizione, profilo del medico e modifica dall'area admin.
 import { leggi, leggiIndirizzo } from "@/lib/farmacie/dati";
-import { emailValida, provinciaValida, telefonoValido } from "@/lib/validazione";
+import { emailValida, ERRORE_TELEFONO, normalizzaTelefono, provinciaValida, telefonoValido } from "@/lib/validazione";
 
 export type DatiMedico = {
   nome: string;
@@ -24,7 +24,7 @@ export function leggiDatiMedico(fd: FormData, opzioni: { identificativi: boolean
   const errori: Record<string, string> = {};
   const dati: Partial<DatiMedico> = {
     email: leggi(fd, "email").toLowerCase(),
-    telefono: leggi(fd, "telefono"),
+    telefono: normalizzaTelefono(leggi(fd, "telefono")),
     specializzazione: leggi(fd, "specializzazione"),
     struttura: leggi(fd, "struttura"),
   };
@@ -40,7 +40,7 @@ export function leggiDatiMedico(fd: FormData, opzioni: { identificativi: boolean
   }
   if (dati.specializzazione!.length < 2) errori.specializzazione = "Indica la specializzazione (es. Medicina generale)";
   if (!emailValida(dati.email!)) errori.email = "Indirizzo email non valido";
-  if (!telefonoValido(dati.telefono!)) errori.telefono = "Numero di telefono non valido";
+  if (!telefonoValido(dati.telefono!)) errori.telefono = ERRORE_TELEFONO;
   const ind = leggiIndirizzo(fd, "studio", errori);
   Object.assign(dati, { presso: ind.presso, indirizzo: ind.indirizzo, cap: ind.cap, citta: ind.citta, provincia: ind.provincia });
   return { dati, errori };

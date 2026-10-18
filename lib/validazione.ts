@@ -73,11 +73,27 @@ export function provinciaValida(input: string): boolean {
   return /^[A-Z]{2}$/.test(input.trim().toUpperCase());
 }
 
-/** Telefono: almeno 6 cifre, sono ammessi spazi, trattini, punti e il prefisso +. */
-export function telefonoValido(input: string): boolean {
-  const t = input.trim();
-  return /^\+?[\d\s./-]+$/.test(t) && t.replace(/\D/g, "").length >= 6;
+/**
+ * Ripulisce il telefono così come lo scrivono le persone: toglie "tel." / "cell." davanti,
+ * converte i trattini tipografici (copiati da Word o da un sito) e gli spazi speciali.
+ */
+export function normalizzaTelefono(input: string): string {
+  return input
+    .normalize("NFKC")
+    .replace(/[‐-―−]/g, "-")
+    .replace(/^\s*(tel|telefono|cell|cellulare|mob)\.?\s*:?\s*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
+
+/** Telefono: da 6 a 15 cifre; ammessi spazi, trattini, punti, barre, parentesi e il prefisso +. */
+export function telefonoValido(input: string): boolean {
+  const t = normalizzaTelefono(input);
+  const cifre = t.replace(/\D/g, "").length;
+  return /^\+?[\d\s()./-]+$/.test(t) && cifre >= 6 && cifre <= 15;
+}
+
+export const ERRORE_TELEFONO = "Numero di telefono non valido: scrivi solo il numero, ad es. 081 1234567 oppure +39 333 1234567";
 
 /** Stessa regola di Supabase Auth (config.toml): almeno 8 caratteri, lettere e numeri. */
 export function passwordValida(input: string): boolean {

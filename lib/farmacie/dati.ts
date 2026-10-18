@@ -7,6 +7,8 @@ import {
   partitaIvaValida,
   provinciaValida,
   sdiValido,
+  ERRORE_TELEFONO,
+  normalizzaTelefono,
   telefonoValido,
 } from "@/lib/validazione";
 
@@ -73,7 +75,7 @@ export function leggiDatiFarmacia(fd: FormData, opzioni: { identificativi: boole
     sdi: leggi(fd, "sdi").toUpperCase(),
     pec: leggi(fd, "pec").toLowerCase(),
     email: leggi(fd, "email").toLowerCase(),
-    telefono: leggi(fd, "telefono"),
+    telefono: normalizzaTelefono(leggi(fd, "telefono")),
   };
   if (opzioni.identificativi) {
     dati.ragione_sociale = leggi(fd, "ragione_sociale");
@@ -91,7 +93,7 @@ export function leggiDatiFarmacia(fd: FormData, opzioni: { identificativi: boole
   if (dati.pec && !emailValida(dati.pec)) errori.pec = "Indirizzo PEC non valido";
   if (!dati.sdi && !dati.pec) errori.sdi = "Indica il codice SDI oppure la PEC";
   if (!emailValida(dati.email!)) errori.email = "Indirizzo email non valido";
-  if (!telefonoValido(dati.telefono!)) errori.telefono = "Numero di telefono non valido";
+  if (!telefonoValido(dati.telefono!)) errori.telefono = ERRORE_TELEFONO;
 
   const consegna = leggiIndirizzo(fd, "consegna", errori);
   const fatturazione = fd.get("fatturazione_uguale") ? { ...consegna } : leggiIndirizzo(fd, "fatturazione", errori);
