@@ -114,6 +114,13 @@ tests/               Vitest + Playwright
 - **Limiti**: 2000 caratteri per messaggio, 15 messaggi in 5 minuti, 200 al giorno, 120 per conversazione, 8 giri di strumenti per risposta.
 - **Operatore**: `/admin/assistente` (richieste aperte, storico), `/admin/assistente/[id]` (risposta nella stessa chat, email al cliente), `/admin/assistente/domande`; base di conoscenza `/admin/assistente/conoscenza` (solo admin, upload PDF/TXT/MD).
 
+## Fase 8 – area Medici (docs/AREA_MEDICI.md)
+- **Ruolo `medico`** (migrazione a parte `20261018090000_fase8_ruolo_medico.sql`: un valore nuovo di un tipo si usa solo dopo il commit). Tabella `medici` (stato in_attesa / attivo / bloccato, iscrizione all'Ordine unica per provincia), `profili_utente.medico_id`, funzioni `mio_medico_id`, `medico_attivo`, `registra_medico` (medico + profilo + consensi in una transazione), trigger `medici_protegge_campi`.
+- **Nessun dato commerciale**: le politiche RLS di prodotti, lotti, ordini e farmacie non includono i medici. Le schede si leggono dal server con la chiave di servizio e i soli campi informativi (`lib/medici/contenuti.ts`), dopo `richiediMedicoAttivo()`.
+- **Materiale scientifico**: `materiali_medici` + archivio privato Storage `materiali` (solo PDF, 20 MB). Caricamento in due passi (`app/admin/medici/materiale/azioni.ts`): indirizzo firmato per mandare il file direttamente all'archivio (le richieste a Vercel hanno un limite di 4,5 MB), poi controllo del contenuto (`%PDF`) e registrazione. Download solo da `/api/materiali/[id]`: la lettura con il client dell'utente fa passare solo i documenti pubblicati ai medici attivi (bozze solo allo staff).
+- **Campioni**: `richieste_campioni` con fotografia dell'indirizzo di spedizione (`spedizione`), stati nuova → in_lavorazione → spedita / non_accolta, `impostazioni.campioni_max_confezioni`.
+- **Assistente**: stesse conversazioni (`conversazioni.medico_id`), `Interlocutore` farmacia o medico in `lib/chat/conversazioni.ts`; per i medici istruzioni `ISTRUZIONI_MEDICI` e strumenti `lib/chat/strumenti-medici.ts` (`cerca_schede_prodotto`, `cerca_informazioni` con pubblico `medici`, `passa_a_operatore`, `registra_domanda_senza_risposta`): nessun prezzo, lotto, ordine o carrello.
+
 ## Job pianificati (Vercel Cron)
 - `/api/cron/scadenze` cancella anche le conversazioni oltre `impostazioni.mesi_conservazione_chat`.
 - Ogni 15 minuti: `/api/cron/scadenze` (prenotazioni scadute) e `/api/cron/deposito` (invio cumulativo all'orario impostato, sollecito DDT mancanti). Entrambi protetti da `CRON_SECRET`.
@@ -125,10 +132,12 @@ tests/               Vitest + Playwright
 
 ## Pagine
 
-**Pubbliche:** home Magistra con scelta "Farmacie" / "Privati", login, registrazione farmacia, registrazione privato, recupero password, iscrizione in attesa, condizioni di vendita farmacie, condizioni di vendita privati, informativa privacy.
+**Pubbliche:** home Magistra con scelta "Farmacie" / "Privati" / "Medici", login, registrazione farmacia, registrazione privato, registrazione medico, recupero password, iscrizione in attesa, condizioni di vendita farmacie, condizioni di vendita privati, informativa privacy.
 
 **Farmacia:** catalogo con filtri (prodotto, linea, area terapeutica) e badge di stato; scheda prodotto con tabella lotti, scadenze, sconti e 4 prezzi; carrello (lotto, quantità, società che fattura e consegna, modalità di pagamento obbligatoria); riepilogo con imponibile, sconti, IVA, totale, soglie, consegna indicativa e accettazione delle condizioni di vendita; I miei ordini con stati, download e "ripeti ordine"; profilo; chat.
 
 **Privati:** negozio con prezzo pieno, sconto del mese e prezzo finale; scheda prodotto; carrello (quantità, società, pagamento obbligatorio, spese di spedizione); riepilogo con accettazione condizioni privati; I miei ordini; profilo.
 
-**Admin:** cruscotto (con filtro per società e canale); società; sedi e depositi; condizioni di vendita; modalità di pagamento; clienti privati; sconti privati del mese; spese di spedizione; magazzino (import/export, modello); prodotti; sconti per scadenza (vedi `design/riferimento_pannello_sconti.html`); ordini; spedizioni; farmacie e gruppi; listini di gruppo; promozioni con calendario; impostazioni; chatbot; pannello operatore; registro operazioni.
+**Medici:** area con stato dell'accesso; schede prodotto senza prezzi; materiale scientifico; campioni gratuiti; profilo; assistente.
+
+**Admin:** medici, materiale scientifico e richieste di campioni; cruscotto (con filtro per società e canale); società; sedi e depositi; condizioni di vendita; modalità di pagamento; clienti privati; sconti privati del mese; spese di spedizione; magazzino (import/export, modello); prodotti; sconti per scadenza (vedi `design/riferimento_pannello_sconti.html`); ordini; spedizioni; farmacie e gruppi; listini di gruppo; promozioni con calendario; impostazioni; chatbot; pannello operatore; registro operazioni.

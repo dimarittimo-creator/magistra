@@ -13,6 +13,7 @@ type Riga = {
   creata_il: string;
   ultimo_messaggio_il: string;
   farmacia: { ragione_sociale: string; codice_farmacia: string | null } | null;
+  medico: { nome: string; cognome: string } | null;
   privato: { nome: string; cognome: string } | null;
   messaggi: { count: number }[];
   richieste_operatore: { id: string; motivo: string; stato: string; creata_il: string }[];
@@ -29,11 +30,11 @@ export default async function PannelloAssistente() {
   const db = await creaClientServer();
   const { data } = await db
     .from("conversazioni")
-    .select("id, stato, modalita, creata_il, ultimo_messaggio_il, farmacia:farmacia_id(ragione_sociale, codice_farmacia), privato:privato_id(nome, cognome), messaggi(count), richieste_operatore(id, motivo, stato, creata_il)")
+    .select("id, stato, modalita, creata_il, ultimo_messaggio_il, farmacia:farmacia_id(ragione_sociale, codice_farmacia), privato:privato_id(nome, cognome), medico:medico_id(nome, cognome), messaggi(count), richieste_operatore(id, motivo, stato, creata_il)")
     .order("ultimo_messaggio_il", { ascending: false })
     .limit(100);
   const righe = (data ?? []) as unknown as Riga[];
-  const cliente = (r: Riga) => (r.farmacia ? `${r.farmacia.ragione_sociale}${r.farmacia.codice_farmacia ? ` (${r.farmacia.codice_farmacia})` : ""}` : r.privato ? `${r.privato.nome} ${r.privato.cognome}` : "—");
+  const cliente = (r: Riga) => (r.farmacia ? `${r.farmacia.ragione_sociale}${r.farmacia.codice_farmacia ? ` (${r.farmacia.codice_farmacia})` : ""}` : r.privato ? `${r.privato.nome} ${r.privato.cognome}` : r.medico ? `Dott. ${r.medico.nome} ${r.medico.cognome} (medico)` : "—");
   const richieste = righe
     .flatMap((r) => r.richieste_operatore.filter((q) => q.stato === "aperta").map((q) => ({ ...q, conversazione: r })))
     .sort((a, b) => a.creata_il.localeCompare(b.creata_il));

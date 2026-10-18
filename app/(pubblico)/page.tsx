@@ -17,11 +17,11 @@ export default function Home() {
           />
         </div>
         <p className="mt-6 text-lg text-muted max-w-2xl mx-auto">
-          Il portale ordini di Sagè Pharma e Bioeleva per farmacie e clienti privati.
+          Il portale ordini di Sagè Pharma e Bioeleva per farmacie, clienti privati e medici.
         </p>
       </section>
 
-      <section className="mt-10 sm:mt-14 grid gap-5 sm:grid-cols-2" aria-label="Scegli la tua area">
+      <section className="mt-10 sm:mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Scegli la tua area">
         <SceltaArea
           titolo="Sei una farmacia?"
           testo="Consulta la merce del deposito, scegli lotti e condizioni e invia prenotazioni d'ordine non vincolanti."
@@ -33,6 +33,12 @@ export default function Home() {
           testo="Acquista gli integratori a prezzo al pubblico con gli sconti del mese e la consegna a casa."
           href="/negozio"
           etichetta="Entra nell'area Privati"
+        />
+        <SceltaArea
+          titolo="Sei un medico?"
+          testo="Schede prodotto, materiale scientifico, assistente virtuale e richiesta di campioni gratuiti, riservati ai medici iscritti all'Ordine."
+          href="/accesso?area=medici"
+          etichetta="Entra nell'area Medici"
         />
       </section>
     </div>

@@ -294,7 +294,7 @@ export async function eseguiStrumento(nome: string, input: Record<string, unknow
       const motivo = testo(input, "motivo", 500) || "Richiesta di assistenza";
       await ctx.passaAOperatore(motivo);
       ctx.effetti.operatore = true;
-      return { riepilogo: "Richiesta inoltrata: un operatore riceve l'avviso e risponderà in questa chat (in orario d'ufficio). La farmacia può chiudere la pagina: riceverà anche un'email." };
+      return { riepilogo: "Richiesta inoltrata: un operatore riceve l'avviso e risponderà in questa chat (in orario d'ufficio). Si può chiudere la pagina: arriverà anche un'email." };
     }
 
     case "registra_domanda_senza_risposta": {

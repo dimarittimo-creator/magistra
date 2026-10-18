@@ -91,3 +91,22 @@ describe("modalità di prova", () => {
     expect(uso?.type === "tool_use" && uso.name).toBe("registra_domanda_senza_risposta");
   });
 });
+
+describe("modalità di prova per i medici", () => {
+  const strumentiMedici = [{ name: "cerca_schede_prodotto", description: "", input_schema: { type: "object" as const } }];
+  const domanda = (text: string) =>
+    rispostaDiProva({ system: [], tools: strumentiMedici, messages: [{ role: "user", content: [{ type: "text", text }] }] });
+
+  it("non usa strumenti commerciali e non parla di prezzi", async () => {
+    const prezzo = await domanda("Quanto costa il prodotto 000123456?");
+    expect(JSON.stringify(prezzo.content)).toContain("L'area Medici è informativa");
+    const ordine = await domanda("Vorrei sapere dei miei ordini");
+    expect(ordine.content.some((b) => b.type === "tool_use")).toBe(false);
+  });
+  it("cerca nelle schede e nella base di conoscenza", async () => {
+    const elenco = await domanda("Quali prodotti per la ginecologia?");
+    expect(elenco.content.find((b) => b.type === "tool_use")).toMatchObject({ name: "cerca_schede_prodotto" });
+    const info = await domanda("Composizione del magnesio");
+    expect(info.content.find((b) => b.type === "tool_use")).toMatchObject({ name: "cerca_informazioni" });
+  });
+});

@@ -51,6 +51,9 @@ function descrivi(nome: string, esito: Esito): string {
     if (lotto) parti.push(`Lotto ${lotto.codice_lotto}, scadenza ${lotto.scadenza}, ${lotto.prezzo_farmacia_iva_esclusa} a pezzo IVA esclusa (totale ${esito.totale_riga_iva_esclusa}).`);
     parti.push(...lista<string>("avvisi"));
   }
+  if (nome === "cerca_schede_prodotto") {
+    parti.push(elenco(lista<Record<string, string>>("prodotti").map((p) => `${p.nome}${p.formato ? ` (${p.formato})` : ""}${p.area ? `, ${p.area}` : ""}`)));
+  }
   if (nome === "promozioni_attive") {
     parti.push(elenco(lista<Record<string, string>>("promozioni").map((p) => `${p.nome}: ${p.cosa_prevede}, fino al ${p.valida_fino_al}`)));
   }
@@ -114,6 +117,19 @@ export async function rispostaDiProva(r: RichiestaModello): Promise<RispostaMode
   const numeroOrdine = domanda.toUpperCase().match(/\bP-\d{4}-\d{5}\b/)?.[0];
 
   if (/operatore|persona|umano/.test(t)) return usaStrumento("passa_a_operatore", { motivo: domanda.slice(0, 300) });
+
+  // Assistente dei medici: niente strumenti commerciali
+  if (r.tools.some((s) => s.name === "cerca_schede_prodotto")) {
+    if (/pazient|bambin|gravidanz|incinta|posso dar/.test(t)) {
+      return rispondi("Per il singolo paziente non posso dare indicazioni: la valutazione clinica resta sua. Posso riportarle le informazioni approvate e le avvertenze generali dei prodotti.");
+    }
+    if (/prezz|sconto|costa|ordin|disponibil|lott/.test(t)) {
+      return rispondi("L'area Medici è informativa: qui non trattiamo prezzi, disponibilità né ordini. Per l'acquisto il riferimento è la farmacia.");
+    }
+    const cerca = t.match(/(?:cerca|elenco|quali prodotti|prodotti per)s*(.*)/)?.[1];
+    if (cerca !== undefined) return usaStrumento("cerca_schede_prodotto", { testo: cerca.replace(/[?!.]/g, "").trim() });
+    return usaStrumento("cerca_informazioni", { domanda });
+  }
   if (/pazient|bambin|gravidanz|incinta|mio figlio|mia figlia|posso dar/.test(t)) {
     return rispondi("Per il singolo paziente non posso dare indicazioni: serve il parere del medico. Posso però aiutarla con disponibilità, lotti, promozioni e ordini.");
   }

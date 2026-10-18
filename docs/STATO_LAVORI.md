@@ -9,8 +9,26 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
 - [x] Fase 5 – Area Privati (B2C) — **completata** e approvata (30/09/2026). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
 - [x] Fase 6 – Chatbot — **completata** e approvata (30/09/2026): test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
-- [ ] Fase 8 – Area Medici — **da iniziare** (richiesta il 18/10/2026, specifica in docs/AREA_MEDICI.md)
+- [ ] Fase 8 – Area Medici — **pronta in locale, da approvare** (18/10/2026, specifica in docs/AREA_MEDICI.md). Non ancora online: servono l'ok di Salvatore e l'integrazione della privacy per i medici.
 - [ ] Fase 7 – Messa online — **in corso**: online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito,  area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
+
+## Fase 8 – cosa c'è
+- **Home** con il terzo riquadro «Sei un medico?» → `/accesso?area=medici` (accesso e richiesta di accesso).
+- **Iscrizione del medico** (`/registrazione/medico`): nome, cognome, specializzazione, numero e provincia dell'Ordine (unici), email, telefono, studio o struttura (anche indirizzo dei campioni), password, dichiarazione di iscrizione all'Ordine, privacy obbligatoria e marketing facoltativo (versionati). Conferma email, poi **approvazione dell'admin**; email al medico (ricevuta, approvato, non attivo) e agli amministratori.
+- **Area Medici** (`/medici`): in attesa vede solo lo stato e il profilo. Approvato: **schede prodotto** senza prezzi né lotti (ricerca e filtro per area; descrizione e testi della base di conoscenza «Solo medici» o «Tutti»), **materiale scientifico** in PDF, **campioni gratuiti** (prodotto, confezioni fino al massimo delle impostazioni, note; una richiesta in corso per prodotto; elenco con stato), **profilo** (dati identificativi solo dall'admin), **assistente** con i soli contenuti approvati per i medici, nessuno strumento commerciale, passaggio a operatore.
+- **Amministrazione**: menu «Medici» (elenco con filtri e ricerca, scheda con approva / rifiuta / blocca / riattiva, correzione dati, consensi, campioni, storico), `/admin/medici/materiale` (caricamento PDF fino a 20 MB direttamente nell'archivio privato, bozza / pubblicato, elimina), `/admin/medici/campioni` (in lavorazione / spedita / non accolta con messaggio ed email al medico). Cruscotto con medici da approvare e campioni da gestire. Impostazione «confezioni massime per richiesta». Tutto nel registro operazioni.
+- **Sicurezza**: i medici non leggono prodotti, lotti, ordini né farmacie dal database (RLS); le schede si leggono dal server con i soli campi informativi; i PDF stanno in un archivio privato e si scaricano solo da `/api/materiali/…` dopo il controllo (bozze solo allo staff); un trigger impedisce al medico di cambiare stato o dati identificativi.
+- Database: `supabase/migrations/20261018090000_fase8_ruolo_medico.sql` e `20261018090100_fase8_area_medici.sql`. Codice: `lib/medici/`, `lib/chat/strumenti-medici.ts`, `app/(medici)/`, `app/admin/medici/`, `lib/email/modelli-medici.ts`.
+- Test: `tests/e2e/fase8.spec.ts` (6 test).
+
+### Come provarlo (in locale)
+1. `npm run db:utenti-test`: in `credenziali-test.txt` trovi anche «Medico approvato» e «Medico in attesa».
+2. Home → «Entra nell'area Medici»; oppure prova un'iscrizione nuova (le email arrivano su http://127.0.0.1:54324).
+3. Da amministratore: menu «Medici» → approva; «Materiale scientifico» → carica un PDF e pubblicalo; «Richieste campioni» → gestisci.
+
+### Da fare prima della pubblicazione online
+- Integrare l'informativa privacy con la categoria «medici» (finalità: informazione scientifica e campioni) – da far validare al consulente.
+- Caricare i testi della base di conoscenza «Solo medici» e il materiale scientifico approvato.
 
 ## Fase 0 – cosa c'è
 - Next.js + TypeScript + Tailwind con i token colore di `GRAFICA.md` (chiaro e scuro) in `app/globals.css`; caratteri Tinos e Public Sans.

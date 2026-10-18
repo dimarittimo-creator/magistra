@@ -10,6 +10,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     { href: "/admin/ordini", testo: "Ordini" },
     { href: "/admin/farmacie", testo: "Farmacie" },
     { href: "/admin/privati", testo: "Clienti privati" },
+    { href: "/admin/medici", testo: "Medici" },
     { href: "/admin/prodotti", testo: "Prodotti" },
     { href: "/admin/assistente", testo: "Assistente" },
     ...(admin

@@ -3,8 +3,9 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aggiungiLottoAlCarrello } from "@/lib/carrello";
 import { chiediAlModello, type Modalita } from "@/lib/chat/modello";
-import { BENVENUTO, ISTRUZIONI_FARMACIE, contestoFarmacia } from "@/lib/chat/prompt";
+import { BENVENUTO, BENVENUTO_MEDICI, ISTRUZIONI_FARMACIE, ISTRUZIONI_MEDICI, contestoFarmacia, contestoMedico } from "@/lib/chat/prompt";
 import { InputNonValido, STRUMENTI, catalogoPigro, eseguiStrumento, type ContestoStrumenti } from "@/lib/chat/strumenti";
+import { STRUMENTI_MEDICI, eseguiStrumentoMedici } from "@/lib/chat/strumenti-medici";
 import { oggiRoma } from "@/lib/date";
 import { emailAmministrazione } from "@/lib/email/destinatari";
 import { inviaEmail } from "@/lib/email/invia";
@@ -44,7 +45,12 @@ export type VistaConversazione = {
   messaggi: VistaMessaggio[];
 };
 
-type Conversazione = { id: string; utente_id: string; farmacia_id: string | null; stato: VistaConversazione["stato"]; modalita: Modalita };
+type Conversazione = { id: string; utente_id: string; farmacia_id: string | null; medico_id: string | null; stato: VistaConversazione["stato"]; modalita: Modalita };
+
+/** Chi parla con l'assistente: una farmacia attiva o un medico approvato (docs/AREA_MEDICI.md). */
+export type Interlocutore =
+  | { tipo: "farmacia"; farmaciaId: string; nome: string }
+  | { tipo: "medico"; medicoId: string; nome: string; specializzazione: string };
 
 export class ErroreChat extends Error {}
 
@@ -89,7 +95,7 @@ export async function conversazioneInCorso(db: SupabaseClient, utenteId: string)
 // Scritture
 // ---------------------------------------------------------------------------
 async function caricaPropria(servizio: SupabaseClient, conversazioneId: string, utenteId: string): Promise<Conversazione> {
-  const { data } = await servizio.from("conversazioni").select("id, utente_id, farmacia_id, stato, modalita").eq("id", conversazioneId).maybeSingle();
+  const { data } = await servizio.from("conversazioni").select("id, utente_id, farmacia_id, medico_id, stato, modalita").eq("id", conversazioneId).maybeSingle();
   if (!data || data.utente_id !== utenteId) throw new ErroreChat("Conversazione non trovata.");
   if (data.stato === "chiusa") throw new ErroreChat("Questa conversazione è chiusa: iniziane una nuova.");
   return data as Conversazione;
@@ -119,14 +125,14 @@ async function aggiungiMessaggio(
   return data.id as number;
 }
 
-/** Apre una conversazione dopo che la farmacia ha letto l'informativa. */
-export async function iniziaConversazione(opzioni: { utenteId: string; farmaciaId: string; modalita: Modalita }): Promise<string> {
+/** Apre una conversazione dopo che l'utente ha letto l'informativa. */
+export async function iniziaConversazione(opzioni: { utenteId: string; farmaciaId?: string; medicoId?: string; modalita: Modalita }): Promise<string> {
   const servizio = creaClientAdmin();
   // Una sola conversazione aperta per utente: le precedenti si chiudono (restano nello storico)
   await servizio.from("conversazioni").update({ stato: "chiusa", chiusa_il: new Date().toISOString() }).eq("utente_id", opzioni.utenteId).eq("stato", "aperta");
   const { data, error } = await servizio
     .from("conversazioni")
-    .insert({ utente_id: opzioni.utenteId, farmacia_id: opzioni.farmaciaId, modalita: opzioni.modalita })
+    .insert({ utente_id: opzioni.utenteId, farmacia_id: opzioni.farmaciaId ?? null, medico_id: opzioni.medicoId ?? null, modalita: opzioni.modalita })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -135,7 +141,9 @@ export async function iniziaConversazione(opzioni: { utenteId: string; farmaciaI
     testo:
       opzioni.modalita === "solo_operatore"
         ? "Buongiorno! L'assistente automatico al momento non è attivo: scriva pure la sua domanda, la inoltro a un operatore di Magistra che le risponderà qui."
-        : BENVENUTO,
+        : opzioni.medicoId
+          ? BENVENUTO_MEDICI
+          : BENVENUTO,
   });
   return data.id;
 }
@@ -164,17 +172,22 @@ async function controllaFrequenza(servizio: SupabaseClient, utenteId: string): P
 }
 
 /** Passa la conversazione a un operatore: richiesta aperta, avviso email agli admin (una volta per richiesta). */
-export async function passaAOperatore(servizio: SupabaseClient, c: Pick<Conversazione, "id" | "farmacia_id">, motivo: string): Promise<boolean> {
+export async function passaAOperatore(servizio: SupabaseClient, c: Pick<Conversazione, "id" | "farmacia_id" | "medico_id">, motivo: string): Promise<boolean> {
   const { data: aperta } = await servizio.from("richieste_operatore").select("id").eq("conversazione_id", c.id).eq("stato", "aperta").maybeSingle();
   await servizio.from("conversazioni").update({ stato: "operatore" }).eq("id", c.id);
   if (aperta) return false;
   const { error } = await servizio.from("richieste_operatore").insert({ conversazione_id: c.id, motivo: motivo.slice(0, 500) });
   if (error) return false; // richiesta aperta nel frattempo da un'altra chiamata
-  const [{ data: farmacia }, { data: ultimo }] = await Promise.all([
+  const [{ data: farmacia }, { data: medico }, { data: ultimo }] = await Promise.all([
     c.farmacia_id ? servizio.from("farmacie").select("ragione_sociale, codice_farmacia").eq("id", c.farmacia_id).maybeSingle() : Promise.resolve({ data: null }),
+    c.medico_id ? servizio.from("medici").select("nome, cognome, specializzazione").eq("id", c.medico_id).maybeSingle() : Promise.resolve({ data: null }),
     servizio.from("messaggi").select("testo").eq("conversazione_id", c.id).eq("ruolo", "utente").order("id", { ascending: false }).limit(1).maybeSingle(),
   ]);
-  const cliente = farmacia ? `${farmacia.ragione_sociale}${farmacia.codice_farmacia ? ` (${farmacia.codice_farmacia})` : ""}` : "Cliente";
+  const cliente = farmacia
+    ? `${farmacia.ragione_sociale}${farmacia.codice_farmacia ? ` (${farmacia.codice_farmacia})` : ""}`
+    : medico
+      ? `Dott. ${medico.nome} ${medico.cognome} – ${medico.specializzazione} (area Medici)`
+      : "Cliente";
   await inviaEmail(emailRichiestaOperatore(await emailAmministrazione(), { conversazioneId: c.id, cliente, motivo, ultimoMessaggio: ultimo?.testo ?? "" }));
   return true;
 }
@@ -183,7 +196,7 @@ export async function passaAOperatore(servizio: SupabaseClient, c: Pick<Conversa
 export async function chiediOperatore(utenteId: string, conversazioneId: string): Promise<void> {
   const servizio = creaClientAdmin();
   const c = await caricaPropria(servizio, conversazioneId, utenteId);
-  const nuova = await passaAOperatore(servizio, c, "La farmacia ha chiesto di parlare con un operatore");
+  const nuova = await passaAOperatore(servizio, c, c.medico_id ? "Il medico ha chiesto di parlare con un operatore" : "La farmacia ha chiesto di parlare con un operatore");
   if (nuova) {
     await aggiungiMessaggio(servizio, c.id, {
       ruolo: "assistente",
@@ -197,7 +210,7 @@ export async function chiediOperatore(utenteId: string, conversazioneId: string)
  * arrivate dopo l'ultimo messaggio già inviato al modello. Diventano parte del nuovo messaggio dell'utente,
  * così la storia inviata resta sempre identica (si aggiunge soltanto, non si modifica mai).
  */
-async function noteIntermedie(servizio: SupabaseClient, conversazioneId: string): Promise<string[]> {
+async function noteIntermedie(servizio: SupabaseClient, conversazioneId: string, chi: "farmacia" | "medico"): Promise<string[]> {
   const { data: ultimoApi } = await servizio
     .from("messaggi")
     .select("id, creato_il")
@@ -224,7 +237,7 @@ async function noteIntermedie(servizio: SupabaseClient, conversazioneId: string)
       .gt("decisa_il", ultimoApi?.creato_il ?? "1970-01-01"),
   ]);
   const note = (scambi ?? []).map((m) =>
-    m.ruolo === "operatore" ? `[Risposta dell'operatore di Magistra: ${m.testo}]` : `[Messaggio della farmacia all'operatore: ${m.testo}]`,
+    m.ruolo === "operatore" ? `[Risposta dell'operatore di Magistra: ${m.testo}]` : `[Messaggio ${chi === "medico" ? "del medico" : "della farmacia"} all'operatore: ${m.testo}]`,
   );
   for (const p of proposte ?? []) {
     const cosa = `${p.quantita} pezzi di ${p.prodotto_nome}, lotto ${p.codice_lotto}`;
@@ -242,22 +255,22 @@ async function noteIntermedie(servizio: SupabaseClient, conversazioneId: string)
 const RISPOSTA_ERRORE = "Al momento non riesco a rispondere. Riprovi tra qualche minuto oppure prema «Parla con un operatore».";
 const RISPOSTA_RIFIUTO = "Su questa richiesta non posso aiutarla. Se ha bisogno, prema «Parla con un operatore».";
 
-/** Un messaggio della farmacia e la risposta dell'assistente (con gli strumenti necessari). */
+/** Un messaggio dell'utente e la risposta dell'assistente (con gli strumenti necessari). */
 export async function inviaMessaggio(opzioni: {
   db: SupabaseClient;
   utenteId: string;
-  farmaciaId: string;
-  nomeFarmacia: string;
+  interlocutore: Interlocutore;
   conversazioneId: string;
   testo: string;
 }): Promise<void> {
+  const chi = opzioni.interlocutore;
   const testo = opzioni.testo.trim();
   if (!testo) throw new ErroreChat("Scriva un messaggio.");
   if (testo.length > LIMITI.lunghezzaMessaggio) throw new ErroreChat(`Il messaggio è troppo lungo (massimo ${LIMITI.lunghezzaMessaggio} caratteri).`);
 
   const servizio = creaClientAdmin();
   const c = await caricaPropria(servizio, opzioni.conversazioneId, opzioni.utenteId);
-  if (c.farmacia_id !== opzioni.farmaciaId) throw new ErroreChat("Conversazione non trovata.");
+  if (chi.tipo === "farmacia" ? c.farmacia_id !== chi.farmaciaId : c.medico_id !== chi.medicoId) throw new ErroreChat("Conversazione non trovata.");
   await controllaFrequenza(servizio, opzioni.utenteId);
   const { count } = await servizio.from("messaggi").select("id", { count: "exact", head: true }).eq("conversazione_id", c.id);
   if ((count ?? 0) >= LIMITI.messaggiPerConversazione) throw new ErroreChat("Questa conversazione è molto lunga: prema «Nuova conversazione» per continuare.");
@@ -272,7 +285,7 @@ export async function inviaMessaggio(opzioni: {
     return;
   }
 
-  const note = await noteIntermedie(servizio, c.id);
+  const note = await noteIntermedie(servizio, c.id, chi.tipo);
   const messaggioUtente: Anthropic.Beta.BetaMessageParam = {
     role: "user",
     content: [...note.map((n) => ({ type: "text" as const, text: n })), { type: "text", text: testo }],
@@ -283,19 +296,31 @@ export async function inviaMessaggio(opzioni: {
   const storia = (righe ?? []).flatMap((r) => r.api as Anthropic.Beta.BetaMessageParam[]);
 
   const effetti: ContestoStrumenti["effetti"] = { proposte: [], operatore: false };
-  const ctx = {
+  const base = {
     db: opzioni.db,
     servizio,
-    farmaciaId: opzioni.farmaciaId,
     conversazioneId: c.id,
     effetti,
     passaAOperatore: async (motivo: string) => void (await passaAOperatore(servizio, c, motivo)),
-    catalogo: catalogoPigro(opzioni.db, opzioni.farmaciaId),
   };
-  const system: Anthropic.Beta.BetaTextBlockParam[] = [
-    { type: "text", text: ISTRUZIONI_FARMACIE, cache_control: { type: "ephemeral" } },
-    { type: "text", text: contestoFarmacia({ oggi: formattaData(oggiRoma()), farmacia: opzioni.nomeFarmacia }) },
-  ];
+  // Farmacie: strumenti commerciali con i permessi della farmacia. Medici: solo schede e base di conoscenza.
+  const esegui =
+    chi.tipo === "farmacia"
+      ? (nome: string, input: Record<string, unknown>) =>
+          eseguiStrumento(nome, input, { ...base, farmaciaId: chi.farmaciaId, catalogo: catalogoPigro(opzioni.db, chi.farmaciaId) })
+      : (nome: string, input: Record<string, unknown>) => eseguiStrumentoMedici(nome, input, base);
+  const strumenti = chi.tipo === "farmacia" ? STRUMENTI : STRUMENTI_MEDICI;
+  const oggi = formattaData(oggiRoma());
+  const system: Anthropic.Beta.BetaTextBlockParam[] =
+    chi.tipo === "farmacia"
+      ? [
+          { type: "text", text: ISTRUZIONI_FARMACIE, cache_control: { type: "ephemeral" } },
+          { type: "text", text: contestoFarmacia({ oggi, farmacia: chi.nome }) },
+        ]
+      : [
+          { type: "text", text: ISTRUZIONI_MEDICI, cache_control: { type: "ephemeral" } },
+          { type: "text", text: contestoMedico({ oggi, medico: chi.nome, specializzazione: chi.specializzazione }) },
+        ];
 
   const turno: Anthropic.Beta.BetaMessageParam[] = [];
   const strumentiUsati: string[] = [];
@@ -305,7 +330,7 @@ export async function inviaMessaggio(opzioni: {
 
   try {
     for (let giro = 0; giro < LIMITI.giriStrumenti; giro++) {
-      const r = await chiediAlModello(c.modalita, { system, tools: STRUMENTI, messages: [...storia, ...turno] });
+      const r = await chiediAlModello(c.modalita, { system, tools: strumenti, messages: [...storia, ...turno] });
       token.input_tokens += r.usage.input_tokens;
       token.output_tokens += r.usage.output_tokens;
       turno.push({ role: "assistant", content: r.content as Anthropic.Beta.BetaContentBlockParam[] });
@@ -329,7 +354,7 @@ export async function inviaMessaggio(opzioni: {
           strumentiUsati.push(uso.name);
           try {
             const input = uso.input && typeof uso.input === "object" ? (uso.input as Record<string, unknown>) : {};
-            const esito = await eseguiStrumento(uso.name, input, ctx);
+            const esito = await esegui(uso.name, input);
             return { type: "tool_result", tool_use_id: uso.id, content: JSON.stringify(esito) };
           } catch (e) {
             if (!(e instanceof InputNonValido)) console.error(`[assistente] strumento ${uso.name}:`, e);

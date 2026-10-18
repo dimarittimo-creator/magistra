@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Messaggi, type MessaggioChat, type PropostaChat } from "@/components/chat/Messaggi";
 
-// Chat dell'assistente nell'area farmacia: pulsante sempre visibile in basso a destra.
+// Chat dell'assistente nelle aree Farmacie e Medici: pulsante sempre visibile in basso a destra.
 // All'apertura: informativa (GDPR) e dichiarazione che si parla con un'intelligenza artificiale (AI Act).
 
 type Conversazione = {
@@ -23,7 +23,8 @@ async function chiama(corpo?: Record<string, unknown>): Promise<Risposta> {
   return (await r.json().catch(() => ({ errore: "Si è verificato un problema. Riprovi." }))) as Risposta;
 }
 
-export function Assistente() {
+export function Assistente({ area = "farmacia" }: { area?: "farmacia" | "medici" }) {
+  const medici = area === "medici";
   const router = useRouter();
   const [aperto, setAperto] = useState(false);
   const [caricato, setCaricato] = useState(false);
@@ -133,10 +134,17 @@ export function Assistente() {
                   Sta per scrivere a un <strong>assistente virtuale basato su intelligenza artificiale</strong>, non a una persona. Può sempre chiedere di parlare con un
                   operatore.
                 </p>
-                <p>
-                  Disponibilità, prezzi, promozioni e ordini vengono letti in tempo reale dal portale; le informazioni sui prodotti provengono solo dai contenuti approvati
-                  da Sagè Pharma e Bioeleva. L&apos;assistente non dà consigli medici su singoli pazienti e non aggiunge nulla al carrello senza la sua conferma.
-                </p>
+                {medici ? (
+                  <p>
+                    Le informazioni sui prodotti provengono solo dai contenuti scientifici approvati da Sagè Pharma e Bioeleva. L&apos;assistente non fornisce
+                    indicazioni sul singolo paziente: la valutazione clinica resta del medico.
+                  </p>
+                ) : (
+                  <p>
+                    Disponibilità, prezzi, promozioni e ordini vengono letti in tempo reale dal portale; le informazioni sui prodotti provengono solo dai contenuti approvati
+                    da Sagè Pharma e Bioeleva. L&apos;assistente non dà consigli medici su singoli pazienti e non aggiunge nulla al carrello senza la sua conferma.
+                  </p>
+                )}
                 <p>
                   La conversazione viene salvata per {mesi} mesi e poi cancellata. I messaggi sono elaborati per conto di Sagè Pharma e Bioeleva anche dal fornitore del
                   servizio di intelligenza artificiale (Anthropic). <strong>Non inserisca dati sanitari o personali dei pazienti.</strong>{" "}
@@ -152,6 +160,7 @@ export function Assistente() {
               <>
                 <Messaggi
                   messaggi={[...conversazione.messaggi, ...provvisori]}
+                  nomeUtente={medici ? "Lei" : undefined}
                   azioniProposta={(p) => (
                     <>
                       <button type="button" className="btn btn-primary btn-piccolo" disabled={occupato} onClick={() => decidi(p, true)}>

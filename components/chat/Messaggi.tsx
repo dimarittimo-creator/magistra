@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 // Elenco dei messaggi di una conversazione con l'assistente.
-// Usato dalla chat della farmacia (con i pulsanti delle proposte) e dal pannello operatore (solo lettura).
+// Usato dalla chat di farmacie e medici (con i pulsanti delle proposte) e dal pannello operatore (solo lettura).
 
 export type MessaggioChat = {
   id: number;
@@ -34,7 +34,7 @@ const data = new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", day: "2
 /** Rende cliccabili i percorsi interni del portale citati nelle risposte (es. /farmacia/ordini/…). */
 function conLink(testo: string, collegamenti: boolean): ReactNode[] {
   if (!collegamenti) return [testo];
-  return testo.split(/(\/(?:farmacia|condizioni|privacy)[\w/.-]*[\w/])/g).map((parte, i) =>
+  return testo.split(/(\/(?:farmacia|medici|condizioni|privacy)[\w/.-]*[\w/])/g).map((parte, i) =>
     i % 2 === 1 ? (
       <a key={i} href={parte}>
         {parte}

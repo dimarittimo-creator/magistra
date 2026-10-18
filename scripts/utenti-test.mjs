@@ -139,6 +139,41 @@ for (const f of farmacie) {
   credenziali.push(["Cliente privato", email, password]);
 }
 
+// Medici (area Medici): uno approvato e uno in attesa
+const medici = [
+  { email: "medico.attivo@magistra.test", stato: "attivo", nome: "Laura", cognome: "Verdi", specializzazione: "Medicina generale", numero: "12345" },
+  { email: "medico.attesa@magistra.test", stato: "in_attesa", nome: "Paolo", cognome: "Neri", specializzazione: "Ginecologia", numero: "67890" },
+];
+for (const m of medici) {
+  const password = generaPassword();
+  const u = await utente(m.email, password);
+  if (u.nuovo) {
+    const { data: id, error } = await db.rpc("registra_medico", {
+      p_utente: u.id,
+      p_email: m.email,
+      p_medico: {
+        nome: m.nome,
+        cognome: m.cognome,
+        specializzazione: m.specializzazione,
+        numero_iscrizione: m.numero,
+        ordine_provincia: "NA",
+        telefono: "081 0000004",
+        struttura: "Studio medico di prova",
+        indirizzo: "Via dei Mille, 20",
+        cap: "80121",
+        citta: "Napoli",
+        provincia: "NA",
+      },
+      p_marketing: false,
+      p_ip: "127.0.0.1",
+      p_user_agent: "script utenti-test",
+    });
+    if (error) throw error;
+    if (m.stato === "attivo") await db.from("medici").update({ stato: "attivo", approvato_il: new Date().toISOString() }).eq("id", id);
+  }
+  credenziali.push([`Medico ${m.stato === "attivo" ? "approvato" : "in attesa"}`, m.email, password]);
+}
+
 const testo = [
   "CREDENZIALI DI PROVA – solo per il sito in locale (http://localhost:3000)",
   "Non usarle mai sul sito online. Rieseguendo «npm run db:utenti-test» le password cambiano.",

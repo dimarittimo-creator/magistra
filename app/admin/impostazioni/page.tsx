@@ -22,6 +22,7 @@ export default async function Impostazioni() {
     mesi_non_vendibile: i.mesi_non_vendibile == null ? "" : String(i.mesi_non_vendibile),
     mesi_conservazione_chat: String(i.mesi_conservazione_chat),
     mesi_durata_residua_garantita: String(i.mesi_durata_residua_garantita),
+    campioni_max_confezioni: String(i.campioni_max_confezioni),
   };
   return (
     <div className="space-y-6">

@@ -8,23 +8,42 @@ import {
   decidiProposta,
   iniziaConversazione,
   inviaMessaggio,
+  type Interlocutore,
 } from "@/lib/chat/conversazioni";
 import { modalitaAssistente } from "@/lib/chat/modello";
 import { creaClientServer } from "@/lib/supabase/server";
 
 export const maxDuration = 120;
 
-// Chat dell'assistente per le farmacie attive.
+// Chat dell'assistente per le farmacie attive e per i medici approvati (docs/AREA_MEDICI.md).
 // GET: conversazione in corso. POST { azione }: inizia, invia, proposta, operatore, nuova.
 // Nei test automatici (solo in sviluppo) il cookie "magistra_assistente=prova" forza la modalità di prova.
 
 async function farmaciaCollegata() {
   const utente = await utenteCorrente();
-  if (!utente?.profilo || utente.profilo.ruolo !== "farmacia" || !utente.profilo.farmacia_id) return null;
+  const profilo = utente?.profilo;
+  if (!utente || !profilo) return null;
   const db = await creaClientServer();
-  const { data: attiva } = await db.rpc("farmacia_attiva");
-  if (!attiva) return null;
-  return { utente, db, farmaciaId: utente.profilo.farmacia_id };
+  if (profilo.ruolo === "farmacia" && profilo.farmacia_id) {
+    const { data: attiva } = await db.rpc("farmacia_attiva");
+    if (!attiva) return null;
+    return { utente, db, farmaciaId: profilo.farmacia_id as string | undefined, medicoId: undefined as string | undefined };
+  }
+  if (profilo.ruolo === "medico" && profilo.medico_id) {
+    const { data: attivo } = await db.rpc("medico_attivo");
+    if (!attivo) return null;
+    return { utente, db, farmaciaId: undefined, medicoId: profilo.medico_id };
+  }
+  return null;
+}
+
+async function interlocutore(f: NonNullable<Awaited<ReturnType<typeof farmaciaCollegata>>>): Promise<Interlocutore> {
+  if (f.farmaciaId) {
+    const { data: farmacia } = await f.db.from("farmacie").select("ragione_sociale").eq("id", f.farmaciaId).single();
+    return { tipo: "farmacia", farmaciaId: f.farmaciaId, nome: farmacia?.ragione_sociale ?? "" };
+  }
+  const { data: medico } = await f.db.from("medici").select("nome, cognome, specializzazione").eq("id", f.medicoId!).single();
+  return { tipo: "medico", medicoId: f.medicoId!, nome: medico ? `${medico.nome} ${medico.cognome}` : "", specializzazione: medico?.specializzazione ?? "" };
 }
 
 const vietato = () => NextResponse.json({ errore: "Accesso non consentito" }, { status: 403 });
@@ -52,22 +71,21 @@ export async function POST(request: NextRequest) {
         const inCorso = await conversazioneInCorso(f.db, f.utente.id);
         if (inCorso?.richiestaAperta) throw new ErroreChat("Un operatore deve ancora risponderle nella conversazione in corso.");
         const prova = request.cookies.get("magistra_assistente")?.value === "prova";
-        await iniziaConversazione({ utenteId: f.utente.id, farmaciaId: f.farmaciaId, modalita: modalitaAssistente({ provaRichiesta: prova }) });
+        await iniziaConversazione({ utenteId: f.utente.id, farmaciaId: f.farmaciaId, medicoId: f.medicoId, modalita: modalitaAssistente({ provaRichiesta: prova }) });
         break;
       }
       case "invia": {
-        const { data: farmacia } = await f.db.from("farmacie").select("ragione_sociale").eq("id", f.farmaciaId).single();
         await inviaMessaggio({
           db: f.db,
           utenteId: f.utente.id,
-          farmaciaId: f.farmaciaId,
-          nomeFarmacia: farmacia?.ragione_sociale ?? "",
+          interlocutore: await interlocutore(f),
           conversazioneId,
           testo: typeof corpo.testo === "string" ? corpo.testo : "",
         });
         break;
       }
       case "proposta":
+        if (!f.farmaciaId) return NextResponse.json({ errore: "Azione non valida" }, { status: 400 });
         messaggio = await decidiProposta({
           db: f.db,
           utenteId: f.utente.id,

@@ -3,7 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { creaClientServer } from "@/lib/supabase/server";
 
-export type Ruolo = "farmacia" | "privato" | "admin" | "operatore" | "deposito";
+export type Ruolo = "farmacia" | "privato" | "medico" | "admin" | "operatore" | "deposito";
 
 export type Profilo = {
   id: string;
@@ -12,6 +12,7 @@ export type Profilo = {
   email: string | null;
   farmacia_id: string | null;
   privato_id: string | null;
+  medico_id: string | null;
 };
 
 export type Utente = { id: string; email: string; profilo: Profilo | null };
@@ -24,7 +25,7 @@ export const utenteCorrente = cache(async (): Promise<Utente | null> => {
   if (!claims?.sub) return null;
   const { data: profilo } = await db
     .from("profili_utente")
-    .select("id, ruolo, nome, email, farmacia_id, privato_id")
+    .select("id, ruolo, nome, email, farmacia_id, privato_id, medico_id")
     .eq("id", claims.sub)
     .maybeSingle();
   return { id: claims.sub, email: String(claims.email ?? ""), profilo: (profilo as Profilo | null) ?? null };
@@ -40,6 +41,8 @@ export function paginaIniziale(ruolo: Ruolo | undefined): string {
       return "/farmacia";
     case "privato":
       return "/negozio";
+    case "medico":
+      return "/medici";
     default:
       return "/";
   }
@@ -77,6 +80,22 @@ export async function richiediPrivato(): Promise<Utente & { profilo: Profilo; pr
   const { data } = await db.rpc("privato_attivo");
   if (!data) redirect("/negozio?bloccato=1");
   return { ...utente, profilo: utente.profilo, privatoId: utente.profilo.privato_id };
+}
+
+/** Medico collegato (anche in attesa di approvazione): area Medici, profilo. */
+export async function richiediMedico(): Promise<Utente & { profilo: Profilo; medicoId: string }> {
+  const utente = await richiediRuolo("medico");
+  if (!utente.profilo.medico_id) redirect("/");
+  return { ...utente, medicoId: utente.profilo.medico_id };
+}
+
+/** Medico approvato: schede prodotto, materiale scientifico, campioni, assistente. */
+export async function richiediMedicoAttivo(): Promise<Utente & { profilo: Profilo; medicoId: string }> {
+  const utente = await richiediMedico();
+  const db = await creaClientServer();
+  const { data } = await db.rpc("medico_attivo");
+  if (!data) redirect("/medici");
+  return utente;
 }
 
 export const richiediAdmin = () => richiediRuolo("admin");

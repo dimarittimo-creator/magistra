@@ -52,6 +52,8 @@ export function FormImpostazioni({ iniziali }: { iniziali: Record<string, string
           aiuto="Come nelle condizioni di vendita (art. 7.1, oggi 8 mesi): i lotti con scadenza più vicina si possono ordinare solo accettandolo espressamente nel carrello. 0 = nessun controllo" />
         <Campo nome="mesi_conservazione_chat" etichetta="Conservazione delle chat dell'assistente (mesi)" valore={v.mesi_conservazione_chat} errore={e.mesi_conservazione_chat}
           inputMode="numeric" aiuto="Dopo questo periodo conversazioni e domande senza risposta si cancellano da sole (da 1 a 120 mesi)" />
+        <Campo nome="campioni_max_confezioni" etichetta="Area Medici: confezioni massime per richiesta di campioni" valore={v.campioni_max_confezioni}
+          errore={e.campioni_max_confezioni} inputMode="numeric" aiuto="Da 1 a 50" />
       </fieldset>
 
       <EsitoModulo ok={stato.ok} messaggio={stato.messaggio} />

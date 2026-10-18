@@ -39,7 +39,7 @@ export async function rispondiInChat(conversazioneId: string, _prima: StatoModul
     .eq("stato", "aperta");
 
   const { data: cliente } = await servizio.from("profili_utente").select("email, ruolo").eq("id", c.utente_id).maybeSingle();
-  if (cliente?.email) await inviaEmail(emailRispostaOperatore(cliente.email, { percorso: cliente.ruolo === "privato" ? "/negozio?assistente=1" : "/farmacia?assistente=1" }));
+  if (cliente?.email) await inviaEmail(emailRispostaOperatore(cliente.email, { percorso: cliente.ruolo === "privato" ? "/negozio?assistente=1" : cliente.ruolo === "medico" ? "/medici?assistente=1" : "/farmacia?assistente=1" }));
 
   await registraOperazione(await creaClientServer(), utente.id, {
     azione: "risposta_chat",

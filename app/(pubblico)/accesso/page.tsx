@@ -67,6 +67,36 @@ export default async function Accesso({
     );
   }
 
+  if (area === "medici" || prossima?.startsWith("/medici")) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:py-14 grid gap-6 md:grid-cols-[1.1fr_1fr] items-start">
+        <section className="panel p-6 sm:p-8" aria-labelledby="titolo-accesso">
+          <h1 id="titolo-accesso" className="text-3xl text-magistra-blu">
+            Accedi all&apos;area Medici
+            <span className="filetto" aria-hidden="true" />
+          </h1>
+          {messaggio && (
+            <p role="status" className={`avviso mt-5 ${messaggio.ok ? "avviso-ok" : "avviso-errore"}`}>{messaggio.testo}</p>
+          )}
+          <div className="mt-6">
+            <FormAccesso prossima={prossima?.startsWith("/medici") ? prossima : "/medici"} />
+          </div>
+        </section>
+        <section className="panel p-6 sm:p-8" aria-labelledby="titolo-nuovo">
+          <h2 id="titolo-nuovo" className="text-2xl text-magistra-blu">
+            Non ha ancora un accesso?
+            <span className="filetto" aria-hidden="true" />
+          </h2>
+          <p className="mt-4 text-muted">
+            Richieda l&apos;accesso indicando l&apos;iscrizione all&apos;Ordine dei Medici: dopo la verifica potrà consultare schede prodotto e materiale
+            scientifico e richiedere campioni.
+          </p>
+          <Link href="/registrazione/medico" className="btn btn-primary mt-6">Richiedi l&apos;accesso</Link>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:py-14 grid gap-6 md:grid-cols-[1.1fr_1fr] items-start">
       <section className="panel p-6 sm:p-8" aria-labelledby="titolo-accesso">

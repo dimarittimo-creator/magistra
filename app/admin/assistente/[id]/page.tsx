@@ -22,12 +22,14 @@ export default async function Conversazione({ params }: { params: Promise<{ id: 
   const db = await creaClientServer();
   const [vista, { data: info }, { data: strumenti }, { data: richieste }] = await Promise.all([
     leggiConversazione(db, id),
-    db.from("conversazioni").select("creata_il, farmacia:farmacia_id(id, ragione_sociale, codice_farmacia)").eq("id", id).maybeSingle(),
+    db.from("conversazioni").select("creata_il, farmacia:farmacia_id(id, ragione_sociale, codice_farmacia), medico:medico_id(id, nome, cognome, specializzazione)").eq("id", id).maybeSingle(),
     db.from("messaggi").select("strumenti, token_ingresso, token_uscita").eq("conversazione_id", id),
     db.from("richieste_operatore").select("id, motivo, stato, creata_il, chiusa_il").eq("conversazione_id", id).order("creata_il"),
   ]);
   if (!vista || !info) notFound();
   const farmacia = info.farmacia as unknown as { id: string; ragione_sociale: string; codice_farmacia: string | null } | null;
+  const medico = info.medico as unknown as { id: string; nome: string; cognome: string; specializzazione: string } | null;
+  const nomeMedico = medico ? `Dott. ${medico.nome} ${medico.cognome}` : undefined;
   const usati = [...new Set((strumenti ?? []).flatMap((m) => m.strumenti as string[]))];
   const token = (strumenti ?? []).reduce((s, m) => s + (m.token_ingresso ?? 0) + (m.token_uscita ?? 0), 0);
 
@@ -38,11 +40,17 @@ export default async function Conversazione({ params }: { params: Promise<{ id: 
       </p>
       <header>
         <h1 className="text-3xl text-magistra-blu">
-          {farmacia ? <Link href={`/admin/farmacie/${farmacia.id}`}>{farmacia.ragione_sociale}</Link> : "Conversazione"}
+          {farmacia ? (
+            <Link href={`/admin/farmacie/${farmacia.id}`}>{farmacia.ragione_sociale}</Link>
+          ) : medico ? (
+            <Link href={`/admin/medici/${medico.id}`}>{nomeMedico}</Link>
+          ) : (
+            "Conversazione"
+          )}
           <span className="filetto" aria-hidden="true" />
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Iniziata il {formattaDataOra(info.creata_il)} · {MODALITA[vista.modalita]}
+          {medico ? `Area Medici · ${medico.specializzazione} · ` : ""}Iniziata il {formattaDataOra(info.creata_il)} · {MODALITA[vista.modalita]}
           {usati.length ? ` · Dati consultati: ${usati.join(", ")}` : ""}
           {token ? ` · ${token.toLocaleString("it-IT")} token` : ""}
         </p>
@@ -50,7 +58,7 @@ export default async function Conversazione({ params }: { params: Promise<{ id: 
 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr] items-start">
         <section className="panel p-4" aria-label="Messaggi">
-          <Messaggi messaggi={vista.messaggi} collegamenti={false} nomeUtente={farmacia?.ragione_sociale} />
+          <Messaggi messaggi={vista.messaggi} collegamenti={false} nomeUtente={farmacia?.ragione_sociale ?? nomeMedico} />
         </section>
 
         <div className="space-y-6">

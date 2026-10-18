@@ -50,6 +50,16 @@ const AZIONI: Record<string, string> = {
   termina_sconto_privati: "Sconto privati terminato",
   blocca_privato: "Cliente privato bloccato",
   sblocca_privato: "Cliente privato sbloccato",
+  approva_medico: "Medico approvato",
+  riattiva_medico: "Medico riattivato",
+  rifiuta_medico: "Richiesta del medico rifiutata",
+  blocca_medico: "Medico bloccato",
+  modifica_dati_medico: "Dati del medico corretti",
+  carica_materiale_medici: "Materiale scientifico caricato",
+  pubblica_materiale_medici: "Materiale scientifico pubblicato",
+  ritira_materiale_medici: "Materiale scientifico ritirato",
+  elimina_materiale_medici: "Materiale scientifico eliminato",
+  aggiorna_richiesta_campioni: "Richiesta di campioni aggiornata",
 };
 
 const ENTITA: Record<string, { tabella: string; campo: string; chiave?: string; link: (id: string) => string }> = {
@@ -63,6 +73,9 @@ const ENTITA: Record<string, { tabella: string; campo: string; chiave?: string; 
   sedi: { tabella: "sedi", campo: "nome", link: (id) => `/admin/sedi/${id}` },
   gruppi: { tabella: "gruppi", campo: "nome", link: () => "/admin/gruppi" },
   privati: { tabella: "privati", campo: "email", link: () => "/admin/privati" },
+  medici: { tabella: "medici", campo: "cognome", link: (id) => `/admin/medici/${id}` },
+  materiali_medici: { tabella: "materiali_medici", campo: "titolo", link: () => "/admin/medici/materiale" },
+  richieste_campioni: { tabella: "richieste_campioni", campo: "prodotto_nome", link: () => "/admin/medici/campioni" },
 };
 
 export default async function Registro() {

@@ -5,7 +5,7 @@ export const PUBBLICI_KB: Record<string, string> = {
   tutti: "Tutti",
   farmacie: "Solo farmacie",
   privati: "Solo privati",
-  medici: "Solo medici (futuro assistente)",
+  medici: "Solo medici",
 };
 export const STATI_KB: Record<string, { testo: string; classe: string }> = {
   bozza: { testo: "Bozza – non usato", classe: "pill-warn" },

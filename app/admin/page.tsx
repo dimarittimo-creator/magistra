@@ -40,7 +40,7 @@ export default async function Cruscotto({ searchParams }: { searchParams: Promis
   if (p.societa) qOrdini = qOrdini.eq("societa_id", p.societa);
   if (p.canale === "farmacie" || p.canale === "privati") qOrdini = qOrdini.eq("canale", p.canale);
 
-  const [{ data: societa }, { data: ordini }, attesa, daConfermare, senzaDdt, { data: inScadenza }] = await Promise.all([
+  const [{ data: societa }, { data: ordini }, attesa, daConfermare, senzaDdt, { data: inScadenza }, mediciInAttesa, campioniDaGestire] = await Promise.all([
     db.from("societa").select("id, nome_breve").order("predefinita", { ascending: false }),
     qOrdini,
     db.from("farmacie").select("id", { count: "exact", head: true }).eq("stato", "in_attesa"),
@@ -54,6 +54,8 @@ export default async function Cruscotto({ searchParams }: { searchParams: Promis
       .lte("scadenza", aggiungiMesi(oggi, 6))
       .order("scadenza")
       .limit(10),
+    db.from("medici").select("id", { count: "exact", head: true }).eq("stato", "in_attesa"),
+    db.from("richieste_campioni").select("id", { count: "exact", head: true }).in("stato", ["nuova", "in_lavorazione"]),
   ]);
   const periodo = (ordini ?? []) as unknown as OrdinePeriodo[];
 
@@ -84,9 +86,11 @@ export default async function Cruscotto({ searchParams }: { searchParams: Promis
   };
 
   const daFare = [
-    { testo: "Iscrizioni da approvare", valore: attesa.count ?? 0, href: "/admin/farmacie?stato=in_attesa" },
+    { testo: "Farmacie da approvare", valore: attesa.count ?? 0, href: "/admin/farmacie?stato=in_attesa" },
     { testo: "Prenotazioni da confermare", valore: daConfermare.count ?? 0, href: "/admin/ordini?stato=inviato" },
     { testo: "Ordini al deposito senza DDT", valore: senzaDdt.count ?? 0, href: "/admin/ordini?stato=inviato_deposito" },
+    { testo: "Medici da approvare", valore: mediciInAttesa.count ?? 0, href: "/admin/medici?stato=in_attesa" },
+    { testo: "Richieste di campioni da gestire", valore: campioniDaGestire.count ?? 0, href: "/admin/medici/campioni" },
   ];
 
   return (

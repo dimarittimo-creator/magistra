@@ -5,6 +5,7 @@ export const metadata = { title: "Registrazione inviata" };
 export default async function IscrizioneInviata({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
   const { tipo } = await searchParams;
   const privato = tipo === "privato";
+  const medico = tipo === "medico";
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="panel p-6 sm:p-10">
@@ -25,12 +26,14 @@ export default async function IscrizioneInviata({ searchParams }: { searchParams
           ) : (
             <>
               <li>
-                <strong>Attendi l&apos;approvazione.</strong> La nostra amministrazione verifica i dati della farmacia e ti
-                avvisa via email appena l&apos;iscrizione è attiva.
+                <strong>Attendi l&apos;approvazione.</strong>{" "}
+                {medico
+                  ? "Verifichiamo l'iscrizione all'Ordine dei Medici e ti avvisiamo via email appena l'accesso è attivo."
+                  : "La nostra amministrazione verifica i dati della farmacia e ti avvisa via email appena l'iscrizione è attiva."}
               </li>
               <li>
-                <strong>Accedi a Magistra</strong> con la tua email e la password scelta per consultare prezzi e
-                disponibilità.
+                <strong>Accedi a Magistra</strong> con la tua email e la password scelta{" "}
+                {medico ? "per consultare schede prodotto e materiale scientifico." : "per consultare prezzi e disponibilità."}
               </li>
             </>
           )}
