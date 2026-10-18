@@ -9,8 +9,8 @@ _Aggiornato da Claude Code a fine di ogni sessione._
 - [x] Fase 4 – Documenti — **completata** e approvata (30/09/2026).
 - [x] Fase 5 – Area Privati (B2C) — **completata** e approvata (30/09/2026). Online resta **non attivabile** finché mancano spese di spedizione e condizioni privati validate.
 - [x] Fase 6 – Chatbot — **completata** e approvata (30/09/2026): test verdi (114 Vitest, 30 Playwright). Per usare l'intelligenza artificiale vera serve la chiave Anthropic (a pagamento): senza, in locale funziona la modalità di prova.
-- [ ] Fase 8 – Area Medici — **pronta in locale, da approvare** (18/10/2026, specifica in docs/AREA_MEDICI.md). Non ancora online: servono l'ok di Salvatore e l'integrazione della privacy per i medici.
-- [ ] Fase 7 – Messa online — **in corso**: online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito,  area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
+- [ ] Fase 8 – Area Medici — **online per l'amministrazione dal 18/10/2026**, chiusa al pubblico (interruttore «Area Medici aperta al pubblico» in Admin → Impostazioni, spento). Prima di aprirla: informativa privacy che comprenda i medici, base di conoscenza «Solo medici» e materiale scientifico.
+- [ ] Fase 7 – Messa online — **in corso** (18/10/2026: cancellati i dati di prova online – farmacia 0100 e ordini P-2026-00001/00002 – con copia in Documenti\Magistra-backup\2026-10-18; numerazione ordini ripartita da P-2026-00001; il prossimo codice farmacia sarà 0101): online su https://www.magistraonline.it dal 01/10/2026 (database, email, dominio, sicurezza, magazzino di esempio, backup fatti). Restano: prova con 2-3 farmacie, export aggiornato del deposito,  area Privati chiusa finché mancano spese di spedizione e condizioni privati validate; facoltativo chiave Anthropic.
 
 ## Fase 8 – cosa c'è
 - **Home** con il terzo riquadro «Sei un medico?» → `/accesso?area=medici` (accesso e richiesta di accesso).
