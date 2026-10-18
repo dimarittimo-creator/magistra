@@ -17,7 +17,7 @@ export default function Home() {
           />
         </div>
         <p className="mt-6 text-lg text-muted max-w-2xl mx-auto">
-          Il portale ordini di Sagè Pharma e Bioeleva per farmacie, clienti privati e medici.
+          Il portale di Sagè Pharma e Bioeleva per farmacie, clienti privati e medici.
         </p>
       </section>
 
