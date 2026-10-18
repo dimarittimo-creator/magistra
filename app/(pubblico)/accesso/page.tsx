@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { paginaIniziale, utenteCorrente } from "@/lib/auth";
+import { AreaMediciChiusa } from "@/components/AreaMediciChiusa";
+import { areaMediciAperta } from "@/lib/medici/apertura";
 import { areaPrivatiAperta } from "@/lib/negozio";
 import { FormAccesso } from "./FormAccesso";
 
@@ -68,6 +70,7 @@ export default async function Accesso({
   }
 
   if (area === "medici" || prossima?.startsWith("/medici")) {
+    if (!(await areaMediciAperta())) return <AreaMediciChiusa />;
     return (
       <div className="mx-auto max-w-5xl px-4 py-10 sm:py-14 grid gap-6 md:grid-cols-[1.1fr_1fr] items-start">
         <section className="panel p-6 sm:p-8" aria-labelledby="titolo-accesso">

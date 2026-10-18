@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { paginaIniziale, utenteCorrente } from "@/lib/auth";
+import { AreaMediciChiusa } from "@/components/AreaMediciChiusa";
 import { documentoCorrente } from "@/lib/documenti-legali";
+import { areaMediciAperta } from "@/lib/medici/apertura";
 import { FormRegistrazioneMedico } from "./FormRegistrazioneMedico";
 
 export const metadata = { title: "Accesso all'area Medici" };
@@ -9,6 +11,7 @@ export const metadata = { title: "Accesso all'area Medici" };
 export default async function RegistrazioneMedico() {
   const utente = await utenteCorrente();
   if (utente) redirect(paginaIniziale(utente.profilo?.ruolo));
+  if (!(await areaMediciAperta())) return <AreaMediciChiusa />;
   const privacy = await documentoCorrente("privacy");
 
   return (

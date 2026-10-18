@@ -7,6 +7,7 @@ import { inviaEmail } from "@/lib/email/invia";
 import { emailIscrizioneMedicoRicevuta, emailNuovaIscrizioneMedicoAdmin } from "@/lib/email/modelli-medici";
 import { messaggioErroreAuth } from "@/lib/errori-auth";
 import { valoriModulo, type StatoModulo } from "@/lib/farmacie/dati";
+import { areaMediciAperta } from "@/lib/medici/apertura";
 import { leggiDatiMedico } from "@/lib/medici/dati";
 import { creaClientAdmin } from "@/lib/supabase/admin";
 import { creaClientServer } from "@/lib/supabase/server";
@@ -15,6 +16,7 @@ import { passwordValida } from "@/lib/validazione";
 /** Iscrizione del medico: conferma dell'email, poi approvazione dell'amministrazione (docs/AREA_MEDICI.md §1). */
 export async function registraMedico(_prima: StatoModulo, fd: FormData): Promise<StatoModulo> {
   const valori = valoriModulo(fd);
+  if (!(await areaMediciAperta())) return { valori, messaggio: "Le iscrizioni all'area Medici non sono ancora aperte." };
   const { dati, errori } = leggiDatiMedico(fd, { identificativi: true });
   const password = String(fd.get("password") ?? "");
   if (!passwordValida(password)) errori.password = "Almeno 8 caratteri, con lettere e numeri";

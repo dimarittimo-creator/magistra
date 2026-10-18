@@ -20,6 +20,7 @@ export default async function Impostazioni() {
     prezzi_in_richiesta_evasione: i.prezzi_in_richiesta_evasione ? "on" : "",
     email_notifiche_admin: (i.email_notifiche_admin ?? []).join(", "),
     email_assistenza: i.email_assistenza ?? "",
+    area_medici_attiva: i.area_medici_attiva ? "on" : "",
     mesi_non_vendibile: i.mesi_non_vendibile == null ? "" : String(i.mesi_non_vendibile),
     mesi_conservazione_chat: String(i.mesi_conservazione_chat),
     mesi_durata_residua_garantita: String(i.mesi_durata_residua_garantita),

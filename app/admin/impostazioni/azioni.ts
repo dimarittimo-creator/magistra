@@ -48,6 +48,7 @@ export async function salvaImpostazioni(_prima: StatoModulo, fd: FormData): Prom
     mesi_conservazione_chat: intero("mesi_conservazione_chat", 1, 120),
     mesi_durata_residua_garantita: intero("mesi_durata_residua_garantita", 0, 36),
     campioni_max_confezioni: intero("campioni_max_confezioni", 1, 50),
+    area_medici_attiva: Boolean(fd.get("area_medici_attiva")),
   };
   if (Object.keys(errori).length) return { errori, valori, messaggio: "Controlla i campi evidenziati." };
 

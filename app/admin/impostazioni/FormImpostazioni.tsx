@@ -56,6 +56,9 @@ export function FormImpostazioni({ iniziali }: { iniziali: Record<string, string
           inputMode="numeric" aiuto="Dopo questo periodo conversazioni e domande senza risposta si cancellano da sole (da 1 a 120 mesi)" />
         <Campo nome="campioni_max_confezioni" etichetta="Area Medici: confezioni massime per richiesta di campioni" valore={v.campioni_max_confezioni}
           errore={e.campioni_max_confezioni} inputMode="numeric" aiuto="Da 1 a 50" />
+        <Casella nome="area_medici_attiva" selezionata={v.area_medici_attiva === "on"}>
+          Area Medici aperta al pubblico (iscrizione e accesso dei medici). Prima di aprirla, l&apos;informativa privacy deve comprendere anche i medici.
+        </Casella>
       </fieldset>
 
       <EsitoModulo ok={stato.ok} messaggio={stato.messaggio} />
